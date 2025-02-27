@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#ifndef LEXER_H
+#define LEXER_H
 typedef enum{
 	TOKEN_OBRACE,
 	TOKEN_CBRACE,
@@ -25,6 +26,8 @@ typedef struct{
 	const char *input;
 } Lexer;
 
-Lexer* create_lexer(const char* input);
-Token* create_token(TokenType type, const char* value);
-void free_token(Token* token);
+Lexer* createLexer(const char* input);
+Token* createToken(TokenType type, const char* value);
+void freeToken(Token* token);
+Token** lex(const char* filename, int* token_count);
+#endif

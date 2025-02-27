@@ -10,7 +10,7 @@ const char* keywords[] = {
 	NULL
 };
 
-int is_keyword(const char* word) {
+int isKeyword(const char* word) {
     for (int i = 0; keywords[i] != NULL; i++) {
 		if (strcmp(word, keywords[i]) == 0) {
 			return 1; // It's a keyword
@@ -19,27 +19,27 @@ int is_keyword(const char* word) {
     return 0; // Not a keyword
 }
 
-Lexer* create_lexer(const char* input){
+Lexer* createLexer(const char* input){
 	Lexer* l = malloc(sizeof(Lexer));
 	l->input = input;
 	l->pos = 0;
 	return l;	
 }
 
-Token* create_token(TokenType type, const char* value){
+Token* createToken(TokenType type, const char* value){
 	Token* t = malloc(sizeof(Token));
 	t->type = type;
 	t->value = strdup(value);
 	return t;
 }
 
-void free_token(Token* token){
+void freeToken(Token* token){
 	free(token->value);
 	free(token);
 }
 
 // Main lexing logic:
-Token* lexer_next_token(Lexer* l) {
+Token* lexerNextToken(Lexer* l) {
 	while(l->pos < strlen(l->input)){
 		char c = l->input[l->pos];
 
@@ -56,33 +56,33 @@ Token* lexer_next_token(Lexer* l) {
 				l->pos++;
 			}
 			const char* n = strndup(l->input + s, l->pos - s);
-			return create_token(LITERAL_INT, n);
+			return createToken(LITERAL_INT, n);
 		}
 
 		// Parantheses:
 		if (c == '(') {
 			l->pos++;
-			return create_token(TOKEN_OPAREN, "(");
+			return createToken(TOKEN_OPAREN, "(");
 		}
 		if (c == ')') {
 			l->pos++;
-			return create_token(TOKEN_CPAREN, ")");
+			return createToken(TOKEN_CPAREN, ")");
 		}
 
 		// Braces:
 		if (c == '{') {
 			l->pos++;
-			return create_token(TOKEN_OBRACE, "{");
+			return createToken(TOKEN_OBRACE, "{");
 		}
 		if (c == '}') {
 			l->pos++;
-			return create_token(TOKEN_CBRACE, "}");
+			return createToken(TOKEN_CBRACE, "}");
 		}
 
 		// Semicolon:
 		if (c == ';') {
 			l->pos++;
-			return create_token(TOKEN_SEMICOL, ";");
+			return createToken(TOKEN_SEMICOL, ";");
 		}
 
 		// Identifier/Keyword:
@@ -92,18 +92,18 @@ Token* lexer_next_token(Lexer* l) {
 				l->pos++;
 			}
 			char* str = strndup(l->input + s, l->pos - s);
-			if (is_keyword(str)){
+			if (isKeyword(str)){
 				if (strcmp(str, "int")) {
-					return create_token(KEYW_INT, str);
+					return createToken(KEYW_INT, str);
 				}
 				if (strcmp(str, "return")) {
-					return create_token(KEYW_RETURN, str);
+					return createToken(KEYW_RETURN, str);
 				}
 			}
-			return create_token(TOKEN_IDENTIFIER, str);
+			return createToken(TOKEN_IDENTIFIER, str);
 		}
 		l->pos++;
-		return create_token(TOKEN_INVALID, "Invalid");
+		return createToken(TOKEN_INVALID, "Invalid");
 	}
 	return NULL;
 }
@@ -125,14 +125,14 @@ Token** lex(const char* filename, int* token_count) {
     fclose(file);
 
     // Create the lexer
-    Lexer* lexer = create_lexer(input);
+    Lexer* lexer = createLexer(input);
     Token** tokens = NULL; // Start with a NULL pointer
     *token_count = 0;
 
     // Tokenize the input
     Token* token;
     do {
-		token = lexer_next_token(lexer);
+		token = lexerNextToken(lexer);
 		// Append the token to the array
 		tokens = realloc(tokens, sizeof(Token*) * (*token_count + 1)); // Resize to hold one more token
 		tokens[*token_count] = token; // Add the new token
@@ -146,6 +146,7 @@ Token** lex(const char* filename, int* token_count) {
     return tokens; // Return the array of tokens
 }
 
+/*
 int main(int argc, char** argv) {
 	if (argc < 2) {
   		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
@@ -161,9 +162,10 @@ int main(int argc, char** argv) {
     // Print the tokens
     for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
 		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-		free_token(tokens[i]); // Free each token
+		freeToken(tokens[i]); // Free each token
 	}
     free(tokens); // Free the array of tokens
 
 	return 0;
 }
+*/
