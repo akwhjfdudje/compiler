@@ -5,8 +5,8 @@
 #include "lexer.h"
 
 const char* keywords[] = {
-	"int",
 	"return",
+	"int",
 	NULL
 };
 
@@ -93,10 +93,12 @@ Token* lexerNextToken(Lexer* l) {
 			}
 			char* str = strndup(l->input + s, l->pos - s);
 			if (isKeyword(str)){
-				if (strcmp(str, "int")) {
+				if (strcmp(str, "int") == 0) {
+					printf("%s is an int.\n", str);
 					return createToken(KEYW_INT, str);
 				}
-				if (strcmp(str, "return")) {
+				if (strcmp(str, "return") == 0) {
+					printf("%s is a return.\n", str);
 					return createToken(KEYW_RETURN, str);
 				}
 			}
@@ -131,15 +133,20 @@ Token** lex(const char* filename, int* token_count) {
 
     // Tokenize the input
     Token* token;
-    do {
+	while (token != NULL) {
 		token = lexerNextToken(lexer);
+		if (!token) {
+			break;
+		}
 		// Append the token to the array
 		tokens = realloc(tokens, sizeof(Token*) * (*token_count + 1)); // Resize to hold one more token
 		tokens[*token_count] = token; // Add the new token
+		//printf("Current token: Type=%d, Value='%s'\n", tokens[*token_count]->type, tokens[*token_count]->value);
+		//printf("Current token index: %d\n", *token_count);
 		(*token_count)++;
-	} while (token != NULL);
+	}
 
-    free(token); // Free the last EOF token
+    //free(token); // Free the last EOF token
     free(lexer);
     free(input); // Free the input string
 

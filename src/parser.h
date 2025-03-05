@@ -65,4 +65,7 @@ ASTNode *parseExpression(Parser* parser);
 ASTNode *parseConstant(Parser* parser);
 void consume(Parser* parser, TokenType expected, const char *errorMsg);
 Token *currentToken(Parser *parser);
+void printAST(ASTNode *node, int indent);
+void freeAST(ASTNode *node);
+void freeTokens(Token **tokens, int tokenCount);
 #endif

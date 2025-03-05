@@ -3,6 +3,88 @@
 #include <stdio.h>
 #include <string.h>
 
+int main(int argc, char** argv) {
+
+	if (argc < 2) {
+  		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+		return 1;
+	}
+
+    int token_count = 0;
+    Token** tokens = lex(argv[1], &token_count);
+    if (!tokens) {
+		return 1; // Error occurred in lex()
+	}
+
+	printf("%d\n", token_count);
+    for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
+		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
+		//freeToken(tokens[i]); // Free each token
+	}
+	//return 0;
+    // Initialize the parser context.
+	Parser parser;
+	parser.tokens = tokens;
+	parser.currentIndex = 0;
+	parser.tokenCount = token_count;
+	parser.errorFlag = 0;
+
+	// Parse the tokens into an AST.
+	ASTNode *ast = parseProgram(&parser);
+	printf("Parsing complete!\n\nAST:\n");
+	printAST(ast, 0);
+
+	freeAST(ast);
+	freeTokens(tokens, token_count);
+
+	return 0;
+}
+
+
+/*
+int main() {
+    
+	//For demonstration purposes, we build an array of tokens manually.
+	//In a real application, a lexer would generate this array from source code.
+	
+    int tokenCount = 9;
+    Token **tokens = malloc(sizeof(Token *) * tokenCount);
+    
+    tokens[0] = malloc(sizeof(Token)); tokens[0]->type = KEYW_INT;         tokens[0]->value = strdup("int");
+	tokens[1] = malloc(sizeof(Token)); tokens[1]->type = TOKEN_IDENTIFIER; tokens[1]->value = strdup("main");
+	tokens[2] = malloc(sizeof(Token)); tokens[2]->type = TOKEN_OPAREN;     tokens[2]->value = strdup("(");
+	tokens[3] = malloc(sizeof(Token)); tokens[3]->type = TOKEN_CPAREN;     tokens[3]->value = strdup(")");
+	tokens[4] = malloc(sizeof(Token)); tokens[4]->type = TOKEN_OBRACE;     tokens[4]->value = strdup("{");
+	tokens[5] = malloc(sizeof(Token)); tokens[5]->type = KEYW_RETURN;      tokens[5]->value = strdup("return");
+	tokens[6] = malloc(sizeof(Token)); tokens[6]->type = LITERAL_INT;      tokens[6]->value = strdup("42");
+	tokens[7] = malloc(sizeof(Token)); tokens[7]->type = TOKEN_SEMICOL;    tokens[7]->value = strdup(";");
+	tokens[8] = malloc(sizeof(Token)); tokens[8]->type = TOKEN_CBRACE;     tokens[8]->value = strdup("}");
+    
+	printf("%d\n", tokenCount);
+    for (int i = 0; i < tokenCount && tokens[i] != NULL; i++) {
+		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
+		//freeToken(tokens[i]); // Free each token
+	}
+    // Initialize the parser context.
+    Parser parser;
+    parser.tokens = tokens;
+    parser.currentIndex = 0;
+    parser.tokenCount = tokenCount;
+    parser.errorFlag = 0;
+    
+    // Parse the tokens into an AST.
+    ASTNode *ast = parseProgram(&parser);
+    printf("Parsing complete!\n\nAST:\n");
+    printAST(ast, 0);
+    
+    // Clean up allocated memory.
+    freeAST(ast);
+    freeTokens(tokens, tokenCount);
+    
+    return 0;
+}
+*/
+
 void reportError(Parser *parser, const char *message) {
     fprintf(stderr, "Parse error: %s at token '%s'\n",
 		message,
@@ -134,7 +216,14 @@ ASTNode *parseBlock(Parser* parser) {
 	}
 	return node;
 }
+
 ASTNode *parseStatement(Parser* parser) {
+	if (currentToken(parser)->type != KEYW_RETURN) {
+		reportError(parser, "Expected return keyword in statement");
+		skip(parser);
+		return NULL;
+	}
+	consume(parser, KEYW_RETURN, "Return statement start");
 	ASTNode *node = newASTNode(AST_STATEMENT);
 	node->statement.expression = parseExpression(parser);
 	if (parser->errorFlag) {
@@ -149,11 +238,13 @@ ASTNode *parseStatement(Parser* parser) {
 	consume(parser, TOKEN_SEMICOL, "After expression");
 	return node;
 }
+
 ASTNode *parseExpression(Parser* parser) {
     ASTNode *node = newASTNode(AST_EXPRESSION);
 	node->expression.constant = parseConstant(parser);
 	return node;
 }
+
 ASTNode *parseConstant(Parser* parser) {
 	if (currentToken(parser)->type != LITERAL_INT) {
 		reportError(parser, "Expected constant (number) in expression");
@@ -248,76 +339,4 @@ void freeTokens(Token **tokens, int tokenCount) {
 	free(tokens);
 }
 
-/*
-int main(int argc, char** argv) {
-	if (argc < 2) {
-  		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-		return 1;
-	}
 
-    int token_count = 0;
-    Token** tokens = lex(argv[1], &token_count);
-    if (!tokens) {
-		return 1; // Error occurred in lex()
-	}
-
-	printf("%d\n", token_count);
-    for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
-		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-		freeToken(tokens[i]); // Free each token
-	}
-	//return 0;
-    // Initialize the parser context.
-	Parser parser;
-	parser.tokens = tokens;
-	parser.currentIndex = 0;
-	parser.tokenCount = token_count;
-	parser.errorFlag = 0;
-
-	// Parse the tokens into an AST.
-	ASTNode *ast = parseProgram(&parser);
-	printf("Parsing complete!\n\nAST:\n");
-	printAST(ast, 0);
-
-	freeAST(ast);
-	freeTokens(tokens, token_count);
-
-	return 0;
-}
-*/
-
-int main() {
-    /* 
-	          For demonstration purposes, we build an array of tokens manually.
-			         In a real application, a lexer would generate this array from source code.
-					     */
-    int tokenCount = 8;
-    Token **tokens = malloc(sizeof(Token *) * tokenCount);
-    
-    tokens[0] = malloc(sizeof(Token)); tokens[0]->type = KEYW_INT;         tokens[0]->value = strdup("int");
-	tokens[1] = malloc(sizeof(Token)); tokens[1]->type = TOKEN_IDENTIFIER; tokens[1]->value = strdup("main");
-	tokens[2] = malloc(sizeof(Token)); tokens[2]->type = TOKEN_OPAREN;     tokens[2]->value = strdup("(");
-	tokens[3] = malloc(sizeof(Token)); tokens[3]->type = TOKEN_CPAREN;     tokens[3]->value = strdup(")");
-	tokens[4] = malloc(sizeof(Token)); tokens[4]->type = TOKEN_OBRACE;     tokens[4]->value = strdup("{");
-	tokens[5] = malloc(sizeof(Token)); tokens[5]->type = LITERAL_INT;      tokens[5]->value = strdup("42");
-	tokens[6] = malloc(sizeof(Token)); tokens[6]->type = TOKEN_SEMICOL;    tokens[6]->value = strdup(";");
-	tokens[7] = malloc(sizeof(Token)); tokens[7]->type = TOKEN_CBRACE;     tokens[7]->value = strdup("}");
-    
-    // Initialize the parser context.
-    Parser parser;
-    parser.tokens = tokens;
-    parser.currentIndex = 0;
-    parser.tokenCount = tokenCount;
-    parser.errorFlag = 0;
-    
-    // Parse the tokens into an AST.
-    ASTNode *ast = parseProgram(&parser);
-    printf("Parsing complete!\n\nAST:\n");
-    printAST(ast, 0);
-    
-    // Clean up allocated memory.
-    freeAST(ast);
-    freeTokens(tokens, tokenCount);
-    
-    return 0;
-}
