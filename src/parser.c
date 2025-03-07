@@ -19,9 +19,7 @@ int main(int argc, char** argv) {
 	printf("%d\n", token_count);
     for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
 		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-		//freeToken(tokens[i]); // Free each token
 	}
-	//return 0;
     // Initialize the parser context.
 	Parser parser;
 	parser.tokens = tokens;
@@ -31,6 +29,13 @@ int main(int argc, char** argv) {
 
 	// Parse the tokens into an AST.
 	ASTNode *ast = parseProgram(&parser);
+	printf("errors?: %d\n", parser.errorFlag);
+
+	// Break:
+	if (parser.errorFlag) {
+		printf("Do better.\n");
+		return 1;
+	}
 	printf("Parsing complete!\n\nAST:\n");
 	printAST(ast, 0);
 
@@ -98,7 +103,10 @@ void consume(Parser *parser, TokenType expected, const char *errorMsg) {
 		reportError(parser, errorMsg);
 		return;
 	}
-    if (currentToken(parser)->type) free(currentToken(parser)->value);
+    //if (1 || currentToken(parser)->type) {
+	//		free(currentToken(parser)->value);
+	//		currentToken(parser)->value = NULL;
+	//	}
     parser->currentIndex++;
 }
 
@@ -125,7 +133,7 @@ void skip(Parser *parser) {
 	if (currentToken(parser)->type == TOKEN_SEMICOL) {
 		parser->currentIndex++;
 	}
-	parser->errorFlag = 0;
+	//parser->errorFlag = 0;
 }
 
 ASTNode *parseProgram(Parser* parser) {
@@ -333,8 +341,17 @@ void freeAST(ASTNode *node) {
 // Free the array of tokens.
 void freeTokens(Token **tokens, int tokenCount) {
 	for (int i = 0; i < tokenCount; i++) {
-		if (tokens[i]->value) free(tokens[i]->value);
-		free(tokens[i]);
+		if (tokens[i]->type == KEYW_INT
+		||  tokens[i]->type == KEYW_RETURN
+		||  tokens[i]->type == LITERAL_INT
+		||  tokens[i]->type == TOKEN_IDENTIFIER) {
+			free(tokens[i]->value);
+			tokens[i]->value = NULL;
+		}
+		if (tokens[i] != NULL) {
+			free(tokens[i]);
+			tokens[i] = NULL;
+		}
 	}
 	free(tokens);
 }

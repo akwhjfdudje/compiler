@@ -26,10 +26,12 @@ Lexer* createLexer(const char* input){
 	return l;	
 }
 
-Token* createToken(TokenType type, const char* value){
+Token* createToken(TokenType type, char* value){
 	Token* t = malloc(sizeof(Token));
 	t->type = type;
-	t->value = strdup(value);
+	t->value = value;
+	// jesse_shooting_gun.gif:
+	//free(value);
 	return t;
 }
 
@@ -55,7 +57,7 @@ Token* lexerNextToken(Lexer* l) {
 			while(l->pos < strlen(l->input) && isdigit(l->input[l->pos])) {
 				l->pos++;
 			}
-			const char* n = strndup(l->input + s, l->pos - s);
+			char* n = strndup(l->input + s, l->pos - s);
 			return createToken(LITERAL_INT, n);
 		}
 
@@ -133,7 +135,7 @@ Token** lex(const char* filename, int* token_count) {
 
     // Tokenize the input
     Token* token;
-	while (token != NULL) {
+	do {
 		token = lexerNextToken(lexer);
 		if (!token) {
 			break;
@@ -144,7 +146,7 @@ Token** lex(const char* filename, int* token_count) {
 		//printf("Current token: Type=%d, Value='%s'\n", tokens[*token_count]->type, tokens[*token_count]->value);
 		//printf("Current token index: %d\n", *token_count);
 		(*token_count)++;
-	}
+	} while (token != NULL); 
 
     //free(token); // Free the last EOF token
     free(lexer);

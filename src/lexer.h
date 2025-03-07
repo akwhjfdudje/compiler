@@ -27,7 +27,7 @@ typedef struct{
 } Lexer;
 
 Lexer* createLexer(const char* input);
-Token* createToken(TokenType type, const char* value);
+Token* createToken(TokenType type, char* value);
 void freeToken(Token* token);
 Token** lex(const char* filename, int* token_count);
 #endif
