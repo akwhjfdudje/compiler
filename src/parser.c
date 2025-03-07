@@ -45,51 +45,6 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-
-/*
-int main() {
-    
-	//For demonstration purposes, we build an array of tokens manually.
-	//In a real application, a lexer would generate this array from source code.
-	
-    int tokenCount = 9;
-    Token **tokens = malloc(sizeof(Token *) * tokenCount);
-    
-    tokens[0] = malloc(sizeof(Token)); tokens[0]->type = KEYW_INT;         tokens[0]->value = strdup("int");
-	tokens[1] = malloc(sizeof(Token)); tokens[1]->type = TOKEN_IDENTIFIER; tokens[1]->value = strdup("main");
-	tokens[2] = malloc(sizeof(Token)); tokens[2]->type = TOKEN_OPAREN;     tokens[2]->value = strdup("(");
-	tokens[3] = malloc(sizeof(Token)); tokens[3]->type = TOKEN_CPAREN;     tokens[3]->value = strdup(")");
-	tokens[4] = malloc(sizeof(Token)); tokens[4]->type = TOKEN_OBRACE;     tokens[4]->value = strdup("{");
-	tokens[5] = malloc(sizeof(Token)); tokens[5]->type = KEYW_RETURN;      tokens[5]->value = strdup("return");
-	tokens[6] = malloc(sizeof(Token)); tokens[6]->type = LITERAL_INT;      tokens[6]->value = strdup("42");
-	tokens[7] = malloc(sizeof(Token)); tokens[7]->type = TOKEN_SEMICOL;    tokens[7]->value = strdup(";");
-	tokens[8] = malloc(sizeof(Token)); tokens[8]->type = TOKEN_CBRACE;     tokens[8]->value = strdup("}");
-    
-	printf("%d\n", tokenCount);
-    for (int i = 0; i < tokenCount && tokens[i] != NULL; i++) {
-		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-		//freeToken(tokens[i]); // Free each token
-	}
-    // Initialize the parser context.
-    Parser parser;
-    parser.tokens = tokens;
-    parser.currentIndex = 0;
-    parser.tokenCount = tokenCount;
-    parser.errorFlag = 0;
-    
-    // Parse the tokens into an AST.
-    ASTNode *ast = parseProgram(&parser);
-    printf("Parsing complete!\n\nAST:\n");
-    printAST(ast, 0);
-    
-    // Clean up allocated memory.
-    freeAST(ast);
-    freeTokens(tokens, tokenCount);
-    
-    return 0;
-}
-*/
-
 void reportError(Parser *parser, const char *message) {
     fprintf(stderr, "Parse error: %s at token '%s'\n",
 		message,
