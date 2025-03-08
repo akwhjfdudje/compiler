@@ -17,10 +17,6 @@ void consume(Parser *parser, TokenType expected, const char *errorMsg) {
 		reportError(parser, errorMsg);
 		return;
 	}
-    //if (1 || currentToken(parser)->type) {
-	//		free(currentToken(parser)->value);
-	//		currentToken(parser)->value = NULL;
-	//	}
     parser->currentIndex++;
 }
 
@@ -162,8 +158,52 @@ ASTNode *parseStatement(Parser* parser) {
 }
 
 ASTNode *parseExpression(Parser* parser) {
-    ASTNode *node = newASTNode(AST_EXPRESSION);
-	node->expression.constant = parseConstant(parser);
+	if (currentToken(parser)->type == LITERAL_INT) {
+		ASTNode *node = newASTNode(AST_EXPRESSION);
+		node->expression.constant = parseConstant(parser);
+		return node;
+	}
+	ASTNode *node = newASTNode(AST_EXPRESSION);
+	node->expression.unary = NULL;
+	node->expression.unaryCount = 0;
+
+	while (currentToken(parser)->type != LITERAL_INT &&
+			currentToken(parser)->type != TOKEN_EOF) {
+		ASTNode *unary = parseUnary(parser);
+		if (unary) {
+			node->expression.unaryCount++;
+			node->expression.unary = realloc(
+					node->expression.unary, 
+					sizeof(ASTNode *) * node->expression.unaryCount
+				);
+			node->expression.unary[node->expression.unaryCount - 1] = unary;
+		}
+
+	}
+	return node;
+}
+
+ASTNode *parseUnary(Parser* parser) {
+	if (currentToken(parser)->type != OP_COMPL 
+		|| currentToken(parser)->type != OP_NEGATION
+		|| currentToken(parser)->type != OP_NEGATIONL) {
+		reportError(parser, "Expected operator in expression");
+		skip(parser);
+		return NULL;
+	}
+	ASTNode *node = newASTNode(AST_UNARY);
+	if (currentToken(parser)->type == OP_COMPL) {
+		consume(parser, OP_COMPL, "Before expression");
+		return node;
+	}
+	if (currentToken(parser)->type == OP_NEGATION) {
+		consume(parser, OP_NEGATION, "Before expression");
+		return node;
+	}
+	if (currentToken(parser)->type == OP_NEGATIONL) {
+		consume(parser, OP_NEGATIONL, "Before expression");
+		return node;
+	}
 	return node;
 }
 

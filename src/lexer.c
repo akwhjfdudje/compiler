@@ -87,6 +87,20 @@ Token* lexerNextToken(Lexer* l) {
 			return createToken(TOKEN_SEMICOL, ";");
 		}
 
+		// Negation, Bitwise comp.:
+		if (c == '-') {
+			l->pos++;
+			return createToken(OP_NEGATION, "-");
+		}
+		if (c == '~') {
+			l->pos++;
+			return createToken(OP_COMPL, "~");
+		}
+		if (c == '!') {
+			l->pos++;
+			return createToken(OP_NEGATIONL, "!");
+		}
+
 		// Identifier/Keyword:
 		if (isalnum(c)) {
 			size_t s = l->pos;

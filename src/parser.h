@@ -8,7 +8,8 @@ typedef enum {
 	AST_BLOCK,
 	AST_STATEMENT,
 	AST_EXPRESSION,
-	AST_CONSTANT
+	AST_CONSTANT,
+	AST_UNARY
 } ASTNodeType;
 
 typedef struct ASTNode {
@@ -37,8 +38,10 @@ typedef struct ASTNode {
 			struct ASTNode *expression;
 		} statement;
 
-		// AST_EXPRESSION: contains a constant for now
+		// AST_EXPRESSION: contains unaries and constant
 		struct {
+			struct ASTNode **unary;
+			int unaryCount;
 			struct ASTNode *constant;
 		} expression;
 
@@ -46,6 +49,11 @@ typedef struct ASTNode {
 		struct {
 			char *value;
 		} constant;
+
+		// AST_UNARY: unary symbol (as string)
+		struct {
+			char *value;
+		} unary;
 	};
 } ASTNode;
 
@@ -62,6 +70,7 @@ ASTNode *parseFunction(Parser* parser);
 ASTNode *parseBlock(Parser* parser);
 ASTNode *parseStatement(Parser* parser);
 ASTNode *parseExpression(Parser* parser);
+ASTNode *parseUnary(Parser* parser);
 ASTNode *parseConstant(Parser* parser);
 void consume(Parser* parser, TokenType expected, const char *errorMsg);
 Token *currentToken(Parser *parser);
