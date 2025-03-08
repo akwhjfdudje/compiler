@@ -40,8 +40,8 @@ typedef struct ASTNode {
 
 		// AST_EXPRESSION: contains unaries and constant
 		struct {
-			struct ASTNode **unary;
-			int unaryCount;
+			struct ASTNode *expression;
+			struct ASTNode *unary;
 			struct ASTNode *constant;
 		} expression;
 

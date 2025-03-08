@@ -161,25 +161,15 @@ ASTNode *parseExpression(Parser* parser) {
 	if (currentToken(parser)->type == LITERAL_INT) {
 		ASTNode *node = newASTNode(AST_EXPRESSION);
 		node->expression.constant = parseConstant(parser);
+		node->expression.unary = NULL;
+		node->expression.expression = NULL;
 		return node;
 	}
 	ASTNode *node = newASTNode(AST_EXPRESSION);
-	node->expression.unary = NULL;
-	node->expression.unaryCount = 0;
+	node->expression.unary = parseUnary(parser);
+	node->expression.expression = parseExpression(parser);
+	node->expression.constant = NULL;
 
-	while (currentToken(parser)->type != LITERAL_INT &&
-			currentToken(parser)->type != TOKEN_EOF) {
-		ASTNode *unary = parseUnary(parser);
-		if (unary) {
-			node->expression.unaryCount++;
-			node->expression.unary = realloc(
-					node->expression.unary, 
-					sizeof(ASTNode *) * node->expression.unaryCount
-				);
-			node->expression.unary[node->expression.unaryCount - 1] = unary;
-		}
-
-	}
 	return node;
 }
 
