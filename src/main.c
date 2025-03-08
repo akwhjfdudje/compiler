@@ -10,6 +10,7 @@ char *getDirectory(const char *filepath);
 
 int main(int argc, char** argv) {
 
+	// TODO: add DEBUG ifdef for, you know, debugging.
 	if (argc < 2) {
   		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
 		return 1;
@@ -28,12 +29,12 @@ int main(int argc, char** argv) {
 		return 1; // Error occurred in lex()
 	}
 
-	printf("%d\n", token_count);
-	///*	
+	//printf("%d\n", token_count);
+	/*	
 	for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
 		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
 	}
-	//*/
+	*/
     // Initialize the parser context.
 	Parser parser;
 	parser.tokens = tokens;

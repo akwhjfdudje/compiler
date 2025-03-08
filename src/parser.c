@@ -158,6 +158,16 @@ ASTNode *parseStatement(Parser* parser) {
 }
 
 ASTNode *parseExpression(Parser* parser) {
+	if (currentToken(parser)->type != OP_COMPL
+		&& currentToken(parser)->type != OP_NEGATION
+		&& currentToken(parser)->type != OP_NEGATIONL
+		&& currentToken(parser)->type != LITERAL_INT) {
+		reportError(parser, "Invalid expression provided");
+		skip(parser);
+		return NULL;
+	}
+
+	// Base case:
 	if (currentToken(parser)->type == LITERAL_INT) {
 		ASTNode *node = newASTNode(AST_EXPRESSION);
 		node->expression.constant = parseConstant(parser);
@@ -165,32 +175,36 @@ ASTNode *parseExpression(Parser* parser) {
 		node->expression.expression = NULL;
 		return node;
 	}
+
+	// Recursion:
 	ASTNode *node = newASTNode(AST_EXPRESSION);
 	node->expression.unary = parseUnary(parser);
 	node->expression.expression = parseExpression(parser);
 	node->expression.constant = NULL;
-
 	return node;
 }
 
 ASTNode *parseUnary(Parser* parser) {
 	if (currentToken(parser)->type != OP_COMPL 
-		|| currentToken(parser)->type != OP_NEGATION
-		|| currentToken(parser)->type != OP_NEGATIONL) {
+		&& currentToken(parser)->type != OP_NEGATION
+		&& currentToken(parser)->type != OP_NEGATIONL) {
 		reportError(parser, "Expected operator in expression");
 		skip(parser);
 		return NULL;
 	}
 	ASTNode *node = newASTNode(AST_UNARY);
 	if (currentToken(parser)->type == OP_COMPL) {
+		node->unary.value = strdup(currentToken(parser)->value);
 		consume(parser, OP_COMPL, "Before expression");
 		return node;
 	}
 	if (currentToken(parser)->type == OP_NEGATION) {
+		node->unary.value = strdup(currentToken(parser)->value);
 		consume(parser, OP_NEGATION, "Before expression");
 		return node;
 	}
 	if (currentToken(parser)->type == OP_NEGATIONL) {
+		node->unary.value = strdup(currentToken(parser)->value);
 		consume(parser, OP_NEGATIONL, "Before expression");
 		return node;
 	}
@@ -212,6 +226,7 @@ ASTNode *parseConstant(Parser* parser) {
 /* --- AST Printing for Debug --- */
 void printAST(ASTNode *node, int indent) {
 	for (int i = 0; i < indent; i++) printf("  ");
+	printf("|__");
 	switch (node->type) {
 		case AST_PROGRAM:
 			printf("Program:\n");
@@ -235,10 +250,15 @@ void printAST(ASTNode *node, int indent) {
 			break;
 		case AST_EXPRESSION:
 			printf("Expression:\n");
-			printAST(node->expression.constant, indent + 1);
+			if (node->expression.constant != NULL) printAST(node->expression.constant, indent + 1);
+			if (node->expression.unary != NULL) printAST(node->expression.unary, indent + 1);
+			if (node->expression.expression != NULL) printAST(node->expression.expression, indent + 1);
 			break;
 		case AST_CONSTANT:
 			printf("Constant: %s\n", node->constant.value);
+			break;
+		case AST_UNARY:
+			printf("Operator: %s\n", node->unary.value);
 			break;
 		default:
 			printf("Unknown AST Node\n");

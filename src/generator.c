@@ -50,6 +50,7 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			appendFormat(&gen->sb, "    .globl %s\n", node->function.name);
 			appendFormat(&gen->sb, "%s:\n", node->function.name);
 			generateX86(gen, node->function.body);
+			appendString(&gen->sb, "    ret\n");
 			break;
 		}
 		case AST_BLOCK: {
@@ -65,12 +66,27 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			break;
 		}
 		case AST_EXPRESSION: {
-			generateX86(gen, node->expression.constant);  // Generate code for the constant
+			if (node->expression.constant != NULL ) generateX86(gen, node->expression.constant);  // Generate code for the constant
+			if (node->expression.expression != NULL ) generateX86(gen, node->expression.expression);  // Generate code for a subexpression
+			if (node->expression.unary != NULL ) generateX86(gen, node->expression.unary);  // Generate code for a unary operator 
 			break;
 		}
 		case AST_CONSTANT: {
 			appendFormat(&gen->sb, "    movl $%s, %%eax\n", node->constant.value);
-			appendString(&gen->sb, "    ret\n");
+			break;
+		}
+		case AST_UNARY: {
+			if (strcmp(node->unary.value, "-") == 0) {
+				appendString(&gen->sb, "    neg %eax\n");
+			}
+			if (strcmp(node->unary.value, "~") == 0) {
+				appendString(&gen->sb, "    not %eax\n");
+			}
+			if (strcmp(node->unary.value, "!") == 0) {
+				appendString(&gen->sb, "    cmpl $0, %eax\n");
+				appendString(&gen->sb, "    movl $0, %eax\n");
+				appendString(&gen->sb, "    sete %al\n");
+			}
 			break;
 		}
 		default:
