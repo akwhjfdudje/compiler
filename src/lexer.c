@@ -88,19 +88,18 @@ Token* lexerNextToken(Lexer* l) {
 		}
 
 		// Identifier/Keyword:
-		if (isalpha(c)) {
+		if (isalnum(c)) {
 			size_t s = l->pos;
-			while ( (l->pos < strlen(l->input)) && isalpha(l->input[l->pos])) {
+			while ( (l->pos < strlen(l->input)) 
+					&& isalnum(l->input[l->pos]) ) {
 				l->pos++;
 			}
 			char* str = strndup(l->input + s, l->pos - s);
 			if (isKeyword(str)){
 				if (strcmp(str, "int") == 0) {
-					printf("%s is an int.\n", str);
 					return createToken(KEYW_INT, str);
 				}
 				if (strcmp(str, "return") == 0) {
-					printf("%s is a return.\n", str);
 					return createToken(KEYW_RETURN, str);
 				}
 			}

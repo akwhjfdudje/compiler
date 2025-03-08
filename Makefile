@@ -1,5 +1,5 @@
-build: bin/ lexer.o parser.o
-	@gcc bin/lexer.o bin/parser.o -o c3
+build: bin/ lexer.o parser.o generator.o main.o
+	@gcc bin/*.o -o c3
 
 clean:
 	@rm -rf bin/
@@ -10,6 +10,12 @@ lexer.o: src/lexer.c
 
 parser.o: src/parser.c
 	@gcc -ggdb -c src/parser.c -o bin/parser.o
+
+generator.o: src/generator.c
+	@gcc -ggdb -c src/generator.c -o bin/generator.o
+
+main.o: src/main.c
+	@gcc -ggdb -c src/main.c -o bin/main.o
 
 bin/:
 	@mkdir bin

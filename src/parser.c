@@ -3,44 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-int main(int argc, char** argv) {
-
-	if (argc < 2) {
-  		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-		return 1;
-	}
-
-    int token_count = 0;
-    Token** tokens = lex(argv[1], &token_count);
-    if (!tokens) {
-		return 1; // Error occurred in lex()
-	}
-
-	printf("%d\n", token_count);
-	for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
-		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-	}
-    // Initialize the parser context.
-	Parser parser;
-	parser.tokens = tokens;
-	parser.currentIndex = 0;
-	parser.tokenCount = token_count;
-	parser.errorFlag = 0;
-
-	// Parse the tokens into an AST.
-	ASTNode *ast = parseProgram(&parser);
-	if (parser.errorFlag) {
-		printf("Do better.\n");
-		return 1;
-	}
-	printf("Parsing complete!\n\nAST:\n");
-	printAST(ast, 0);
-
-	freeAST(ast);
-	freeTokens(tokens, token_count);
-
-	return 0;
-}
 
 void reportError(Parser *parser, const char *message) {
     fprintf(stderr, "Parse error: %s at token '%s'\n",
