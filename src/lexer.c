@@ -101,6 +101,20 @@ Token* lexerNextToken(Lexer* l) {
 			return createToken(OP_NEGATIONL, "!");
 		}
 
+		// Operators:
+		if (c == '+') {
+			l->pos++;
+			return createToken(OP_ADD, "+");
+		}
+		if (c == '*') {
+			l->pos++;
+			return createToken(OP_MUL, "*");
+		}
+		if (c == '/') {
+			l->pos++;
+			return createToken(OP_ADD, "/");
+		}
+
 		// Identifier/Keyword:
 		if (isalnum(c)) {
 			size_t s = l->pos;

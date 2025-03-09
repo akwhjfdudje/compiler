@@ -15,6 +15,9 @@ typedef enum{
 	OP_NEGATION,
 	OP_COMPL,
 	OP_NEGATIONL,
+	OP_ADD,
+	OP_MUL,
+	OP_DIV,
 	TOKEN_EOF,
 	TOKEN_INVALID,
 } TokenType;
