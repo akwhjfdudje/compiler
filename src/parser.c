@@ -244,6 +244,7 @@ ASTNode *parseFactor(Parser* parser) {
 	
 	if (currentToken(parser)->type == LITERAL_INT) {
 		node->factor.constant = parseConstant(parser);
+		return node;
 	}
 	reportError(parser, "Invalid factor");
 	return NULL;
@@ -317,10 +318,22 @@ void printAST(ASTNode *node, int indent) {
 			printAST(node->statement.expression, indent + 1);
 			break;
 		case AST_EXPRESSION:
-			printf("Expression:\n");
-			//if (node->expression.constant != NULL) printAST(node->expression.constant, indent + 1);
-			//if (node->expression.unary != NULL) printAST(node->expression.unary, indent + 1);
-			//if (node->expression.expression != NULL) printAST(node->expression.expression, indent + 1);
+			printf("Terms:\n");
+			for (int i = 0; i < node->expression.termCount; i++) {
+				printAST(node->expression.terms[i], indent + 1);
+			}
+			break;
+		case AST_TERM:
+			printf("Factors:\n");
+			for (int i = 0; i < node->term.factorCount; i++) {
+				printAST(node->term.factors[i], indent + 1);
+			}
+			break;
+		case AST_FACTOR:
+			printf("Factor:\n");
+			if (node->factor.expression != NULL) printAST(node->factor.expression, indent + 1);	
+			if (node->factor.unary != NULL) printAST(node->factor.unary, indent + 1);	
+			if (node->factor.constant != NULL) printAST(node->factor.constant, indent + 1);	
 			break;
 		case AST_CONSTANT:
 			printf("Constant: %s\n", node->constant.value);
