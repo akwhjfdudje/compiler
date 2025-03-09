@@ -112,7 +112,7 @@ Token* lexerNextToken(Lexer* l) {
 		}
 		if (c == '/') {
 			l->pos++;
-			return createToken(OP_ADD, "/");
+			return createToken(OP_DIV, "/");
 		}
 
 		// Identifier/Keyword:
