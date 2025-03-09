@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
 	}
 
 	//printf("%d\n", token_count);
-	/*	
+	
 	for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
 		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
 	}
-	*/
+	
     // Initialize the parser context.
 	Parser parser;
 	parser.tokens = tokens;
@@ -52,9 +52,10 @@ int main(int argc, char** argv) {
 
 	// Print the tree.
 	//printf("Parsing complete!\n\nAST:\n");
-	//printAST(ast, 0);
+	printAST(ast, 0);
 
 	// Generate x86 code.
+	/*
 	CodeGenerator generator;
 	initStringBuffer(&generator.sb);
 	generateX86(&generator, ast);
@@ -84,13 +85,10 @@ int main(int argc, char** argv) {
 	char exec[256];
 	snprintf(exec, sizeof(exec), "./%s", exeName);
     ret = system(exec);
-	/*
 	if (ret != 0) {
 		fprintf(stderr, "Execution failed with %d\n", ret);
 		return ret;
 	}
-	*/
-
 	char rm[256];
 	snprintf(rm, sizeof(rm), "rm %s", exeName);
     ret = system(rm);
@@ -100,9 +98,9 @@ int main(int argc, char** argv) {
 	}
 
 	free(generator.sb.data);
+*/
 	freeAST(ast);
 	freeTokens(tokens, token_count);
-
 	return 0;
 }
 

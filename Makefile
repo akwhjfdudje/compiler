@@ -1,4 +1,4 @@
-build: bin/ lexer.o parser.o generator.o main.o
+build: bin/ lexer.o parser.o main.o
 	@gcc bin/*.o -o c3
 
 clean:
