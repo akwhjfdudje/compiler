@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #ifndef LEXER_H
 #define LEXER_H

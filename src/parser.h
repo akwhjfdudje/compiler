@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "lexer.h"
 #ifndef PARSER_H
 #define PARSER_H
