@@ -181,27 +181,3 @@ Token** lex(const char* filename, int* token_count) {
 
     return tokens; // Return the array of tokens
 }
-
-/*
-int main(int argc, char** argv) {
-	if (argc < 2) {
-  		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-		return 1;
-	}
-
-    int token_count = 0;
-    Token** tokens = lex(argv[1], &token_count);
-    if (!tokens) {
-		return 1; // Error occurred in lex()
-	}
-
-    // Print the tokens
-    for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
-		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
-		freeToken(tokens[i]); // Free each token
-	}
-    free(tokens); // Free the array of tokens
-
-	return 0;
-}
-*/
