@@ -177,19 +177,23 @@ ASTNode *parseExpression(Parser* parser) {
 	}
 
 	ASTNode *node = newASTNode(AST_EXPRESSION);
-	node->expression.terms = NULL;
-	node->expression.termCount = 0;
-
+	node->expression.binary = NULL;
 	ASTNode *term = parseTerm(parser);
 	if (term) {
-		node->expression.termCount++;
-		node->expression.terms = realloc(node->expression.terms, sizeof(ASTNode *) * node->expression.termCount);
-		node->expression.terms[node->expression.termCount - 1] = term;
+		node->expression.term = term;
 	}
 
-	while (nextToken(parser)->type == OP_ADD ||
-		nextToken(parser)->type == OP_NEGATION) {
-		ASTNode *nextTerm = parseTerm(parser);
+	// TODO: currently can't parse full
+	//       expressions. something seems  
+    //       to be overwritten. need to
+	//       fix.
+	while (currentToken(parser)->type == OP_ADD ||
+		currentToken(parser)->type == OP_NEGATION) {
+		node->expression.binary = parseBinary(parser); 
+		node->expression.binary->binary.left = term; 
+		node->expression.binary->binary.right = parseTerm(parser); 
+		node->expression.term = NULL;
+		// printf("node value: %s\n", node->binary.value);
 	}
 	return node;
 }
@@ -206,19 +210,18 @@ ASTNode *parseTerm(Parser* parser) {
 	}
 
 	ASTNode *node = newASTNode(AST_TERM);
-	node->term.factors = NULL;
-	node->term.factorCount = 0;
-
-	ASTNode *factor= parseFactor(parser);
+	node->term.binary = NULL;
+	ASTNode *factor = parseFactor(parser);
 	if (factor) {
-		node->term.factorCount++;
-		node->term.factors = realloc(node->term.factors, sizeof(ASTNode *) * node->term.factorCount);
-		node->term.factors[node->term.factorCount - 1] = factor;
+		node->term.factor = factor;
 	}
 
-	while (nextToken(parser)->type == OP_MUL ||
-		nextToken(parser)->type == OP_DIV) {
-		ASTNode *nextFactor = parseFactor(parser);
+	while (currentToken(parser)->type == OP_MUL ||
+		currentToken(parser)->type == OP_DIV) {
+		node->term.binary = parseBinary(parser); 
+		node->term.binary->binary.left = factor; 
+		node->term.binary->binary.right = parseFactor(parser); 
+		node->term.factor = NULL;
 	}
 	return node;
 }
@@ -230,9 +233,7 @@ ASTNode *parseFactor(Parser* parser) {
 	node->factor.constant = NULL;
 	if (currentToken(parser)->type == TOKEN_OBRACE) {
 		node->factor.expression = parseExpression(parser);
-		if (currentToken(parser)->type != TOKEN_CBRACE) {
-			reportError(parser, "Expected closing bracket at end of expression");
-		}
+		consume(parser, TOKEN_CBRACE, "Expected closing bracket at end of expression");
 		return node;
 	}
 
@@ -277,7 +278,36 @@ ASTNode *parseUnary(Parser* parser) {
 }
 
 ASTNode *parseBinary(Parser* parser) {
-	return NULL;
+	if (currentToken(parser)->type != OP_ADD
+		&& currentToken(parser)->type != OP_MUL
+		&& currentToken(parser)->type != OP_DIV
+		&& currentToken(parser)->type != OP_NEGATION) {
+		reportError(parser, "Expected operator in expression");
+		skip(parser);
+		return NULL;
+	}
+	ASTNode *node = newASTNode(AST_BINARY);
+	if (currentToken(parser)->type == OP_ADD) {
+		node->binary.value = strdup(currentToken(parser)->value);
+		consume(parser, OP_ADD, "Before expression");
+		return node;
+	}
+	if (currentToken(parser)->type == OP_MUL) {
+		node->binary.value = strdup(currentToken(parser)->value);
+		consume(parser, OP_MUL, "Before expression");
+		return node;
+	}
+	if (currentToken(parser)->type == OP_NEGATION) {
+		node->unary.value = strdup(currentToken(parser)->value);
+		consume(parser, OP_NEGATION, "Before expression");
+		return node;
+	}
+	if (currentToken(parser)->type == OP_DIV) {
+		node->unary.value = strdup(currentToken(parser)->value);
+		consume(parser, OP_DIV, "Before expression");
+		return node;
+	}
+	return node;
 }
 
 ASTNode *parseConstant(Parser* parser) {
@@ -319,14 +349,18 @@ void printAST(ASTNode *node, int indent) {
 			break;
 		case AST_EXPRESSION:
 			printf("Terms:\n");
-			for (int i = 0; i < node->expression.termCount; i++) {
-				printAST(node->expression.terms[i], indent + 1);
+			if (node->expression.term != NULL) {
+				printAST(node->expression.term, indent);
+			} else {
+				printAST(node->expression.binary, indent + 1);
 			}
 			break;
 		case AST_TERM:
 			printf("Factors:\n");
-			for (int i = 0; i < node->term.factorCount; i++) {
-				printAST(node->term.factors[i], indent + 1);
+			if (node->term.factor != NULL) {
+				printAST(node->term.factor, indent);
+			} else {
+				printAST(node->term.binary, indent + 1);
 			}
 			break;
 		case AST_FACTOR:
@@ -341,6 +375,16 @@ void printAST(ASTNode *node, int indent) {
 		case AST_UNARY:
 			printf("Operator: %s\n", node->unary.value);
 			break;
+		case AST_BINARY:
+			printf("Left:\n");
+			printAST(node->binary.left, indent + 1);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("Operator:%s\n", node->binary.value);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("Right:\n");
+			printAST(node->binary.right, indent + 1);
 		default:
 			printf("Unknown AST Node\n");
 			break;
@@ -372,16 +416,18 @@ void freeAST(ASTNode *node) {
 			freeAST(node->statement.expression);
 			break;
 		case AST_EXPRESSION:
-			for (int i = 0; i < node->expression.termCount; i++) {
-				freeAST(node->expression.terms[i]);
+			if (node->expression.term != NULL) {
+				freeAST(node->expression.term);
+			} else {
+				freeAST(node->expression.binary);
 			}
-			free(node->expression.terms);
 			break;
 		case AST_TERM:
-			for (int i = 0; i < node->term.factorCount; i++) {
-				freeAST(node->term.factors[i]);
+			if (node->term.factor != NULL) {
+				freeAST(node->term.factor);
+			} else {
+				freeAST(node->term.factor);
 			}
-			free(node->term.factors);
 			break;
 		case AST_FACTOR:
 			if ( node->factor.expression != NULL ) {
@@ -399,6 +445,10 @@ void freeAST(ASTNode *node) {
 		case AST_CONSTANT:
 			free(node->constant.value);
 			break;
+		case AST_BINARY:
+			freeAST(node->binary.left);
+			freeAST(node->binary.right);
+			free(node->binary.value);
 		default:
 			break;
 	}
