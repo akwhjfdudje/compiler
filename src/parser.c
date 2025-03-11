@@ -190,12 +190,17 @@ ASTNode *parseExpression(Parser* parser) {
 	while (currentToken(parser)->type == OP_ADD ||
 		currentToken(parser)->type == OP_NEGATION) {
 		ASTNode *bin = parseBinary(parser);
-		bin->binary.left = term;
+		bin->binary.left = node->expression.term != NULL ? node->expression.term : node->term.binary->binary.left;
 		term = parseTerm(parser);
 		bin->binary.right = term;
 		node->expression.binary = bin;
-		//node = bin->binary.right;
+		node->expression.term = NULL;
+		node = term;
 	}
+
+	// Found seemingly elegant solution to operator parsing:
+	// https://en.wikipedia.org/wiki/Shunting_yard_algorithm
+	// TODO: refactor to implement this.
 	return root;
 }
 
@@ -220,10 +225,12 @@ ASTNode *parseTerm(Parser* parser) {
 	while (currentToken(parser)->type == OP_MUL ||
 		currentToken(parser)->type == OP_DIV) {
 		ASTNode* bin = parseBinary(parser);
-		bin->binary.left = factor;
+		bin->binary.left = node->term.factor != NULL ? node->term.factor : node->factor.constant;
 		factor = parseFactor(parser);
 		bin->binary.right = factor; 
 		node->term.binary = bin;
+		node->term.factor = NULL;
+		node = factor;
 	}
 	printf("Value: %s\n", factor->factor.constant->constant.value);
 	return root;
