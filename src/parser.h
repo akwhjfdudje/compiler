@@ -46,12 +46,6 @@ typedef struct ASTNode {
 			struct ASTNode *binary;
 		} expression;
 
-		// AST_TERM: contains factors
-		struct {
-			struct ASTNode *factor;
-			struct ASTNode *binary;
-		} term;
-
 		// AST_FACTOR: contains a sub-expression, an operator, a factor, or a constant
 		struct {
 			struct ASTNode *expression;

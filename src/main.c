@@ -32,9 +32,11 @@ int main(int argc, char** argv) {
 
 	//printf("%d\n", token_count);
 	
+	#ifdef DEBUG
 	for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
 		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
 	}
+	#endif
 	
     // Initialize the parser context.
 	Parser parser;
@@ -51,11 +53,13 @@ int main(int argc, char** argv) {
 	}
 
 	// Print the tree.
+	#ifdef DEBUG
 	//printf("Parsing complete!\n\nAST:\n");
 	printAST(ast, 0);
+	#endif
 
 	// Generate x86 code.
-/*
+
 	CodeGenerator generator;
 	initStringBuffer(&generator.sb);
 	generateX86(&generator, ast);
@@ -68,7 +72,9 @@ int main(int argc, char** argv) {
 	}
 	fprintf(file, "%s", generator.sb.data);
 	fclose(file);	
-	//printf("Assembly code written to asm.s:\n%s\n", generator.sb.data);
+	#ifdef DEBUG
+	printf("Assembly code written to asm.s:\n%s\n", generator.sb.data);
+	#endif
 
 	const char *exeName = outputPath;
 	char command[1024];
@@ -98,7 +104,6 @@ int main(int argc, char** argv) {
 	}
 
 	free(generator.sb.data);
-*/
 	freeAST(ast);
 	freeTokens(tokens, token_count);
 	free((void *)basename);

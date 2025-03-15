@@ -41,7 +41,6 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 		case AST_PROGRAM: {
 			for (int i = 0; i < node->program.functionCount; i++) {
 				generateX86(gen, node->program.functions[i]);
-				appendString(&gen->sb, "\n");
 			}
 			break;
 		}
@@ -65,10 +64,43 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			generateX86(gen, node->statement.expression);  // Generate code for the return expression.
 			break;
 		}
-		case AST_EXPRESSION: {
-			if (node->expression.constant != NULL ) generateX86(gen, node->expression.constant);  // Generate code for the constant
-			if (node->expression.expression != NULL ) generateX86(gen, node->expression.expression);  // Generate code for a subexpression
-			if (node->expression.unary != NULL ) generateX86(gen, node->expression.unary);  // Generate code for a unary operator 
+		case AST_FACTOR: {
+			if (node->factor.factor != NULL) generateX86(gen, node->factor.factor); // Generate code for the subfactor
+			if (node->factor.expression != NULL ) generateX86(gen, node->factor.expression);  // Generate code for a subexpression
+			if (node->factor.unary != NULL ) generateX86(gen, node->factor.unary);  // Generate code for a unary operator 
+			if (node->factor.constant != NULL ) generateX86(gen, node->factor.constant);  // Generate code for the constant
+			break;
+		}
+		case AST_BINARY: {
+			/*
+				x86 code for a binary addition operation:
+				<CODE FOR e1 GOES HERE>
+				push %eax ; save value of e1 on the stack
+				<CODE FOR e2 GOES HERE>
+				pop %ecx ; pop e1 from the stack into ecx
+				addl %ecx, %eax ; add e1 to e2, save results in eax
+			*/
+			generateX86(gen, node->binary.left);
+			appendString(&gen->sb, "    push %eax\n");
+			generateX86(gen, node->binary.right);
+			appendString(&gen->sb, "    pop %ecx\n");
+			if (!(strcmp(node->binary.value, "+"))) {
+				appendString(&gen->sb, "    addl %ecx, %eax\n");
+			}
+			if (!(strcmp(node->binary.value, "-"))) {
+				appendString(&gen->sb, "    subl %eax, %ecx\n");
+				appendString(&gen->sb, "    movl %ecx, %eax\n");
+			}
+			if (!(strcmp(node->binary.value, "*"))) {
+				appendString(&gen->sb, "    imul %ecx, %eax\n");
+			}
+			if (!(strcmp(node->binary.value, "/"))) {
+				appendString(&gen->sb, "    xorl %ecx, %eax\n");
+				appendString(&gen->sb, "    xorl %eax, %ecx\n");
+				appendString(&gen->sb, "    xorl %ecx, %eax\n");
+				appendString(&gen->sb, "    cdq\n");
+				appendString(&gen->sb, "    idivl %ecx\n");
+			}
 			break;
 		}
 		case AST_CONSTANT: {

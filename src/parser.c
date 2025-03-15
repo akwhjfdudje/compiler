@@ -226,6 +226,8 @@ ASTNode *parseFactor(Parser* parser) {
 		|| currentToken(parser)->type == OP_NEGATIONL
 		|| currentToken(parser)->type == OP_COMPL) {
 		node->factor.unary = parseUnary(parser);
+		node->factor.factor = parseFactor(parser);
+		return node;
 	}
 	
 	if (currentToken(parser)->type == LITERAL_INT) {
@@ -347,6 +349,7 @@ void printAST(ASTNode *node, int indent) {
 			if (node->factor.expression != NULL) printAST(node->factor.expression, indent + 1);	
 			if (node->factor.unary != NULL) printAST(node->factor.unary, indent + 1);	
 			if (node->factor.constant != NULL) printAST(node->factor.constant, indent + 1);	
+			if (node->factor.factor != NULL) printAST(node->factor.factor, indent + 1);
 			break;
 		case AST_CONSTANT:
 			printf("Constant: %s\n", node->constant.value);
@@ -408,6 +411,10 @@ void freeAST(ASTNode *node) {
 			if ( node->factor.constant != NULL ) {
 				freeAST(node->factor.constant);
 				node->factor.constant = NULL;
+			}
+			if ( node->factor.factor != NULL ) {
+				freeAST(node->factor.factor);
+				node->factor.factor = NULL;
 			}
 			break;
 		case AST_UNARY:
