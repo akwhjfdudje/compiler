@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
 	printAST(ast, 0);
 
 	// Generate x86 code.
-	/*
+/*
 	CodeGenerator generator;
 	initStringBuffer(&generator.sb);
 	generateX86(&generator, ast);
@@ -101,6 +101,8 @@ int main(int argc, char** argv) {
 */
 	freeAST(ast);
 	freeTokens(tokens, token_count);
+	free((void *)basename);
+	free((void *)dir);
 	return 0;
 }
 

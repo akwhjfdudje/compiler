@@ -206,8 +206,6 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		left = binNode;
 	}
 
-	// TODO: currently, bug exists that causes a stack overflow 
-	//       when using parentheses. Fix.
 	return left;
 
 }
@@ -218,6 +216,7 @@ ASTNode *parseFactor(Parser* parser) {
 	node->factor.unary = NULL;
 	node->factor.constant = NULL;
 	if (currentToken(parser)->type == TOKEN_OPAREN) {
+		consume(parser, TOKEN_OPAREN, "At expression start");
 		node->factor.expression = parseExpression(parser, 0);
 		consume(parser, TOKEN_CPAREN, "Expected closing bracket at end of expression");
 		return node;
@@ -397,40 +396,46 @@ void freeAST(ASTNode *node) {
 		case AST_STATEMENT:
 			freeAST(node->statement.expression);
 			break;
-		case AST_EXPRESSION:
-			if (node->expression.term != NULL) {
-				freeAST(node->expression.term);
-			} else {
-				freeAST(node->expression.binary);
-			}
-			break;
-		case AST_TERM:
-			if (node->term.factor != NULL) {
-				freeAST(node->term.factor);
-			} else {
-				freeAST(node->term.factor);
-			}
-			break;
 		case AST_FACTOR:
 			if ( node->factor.expression != NULL ) {
 				freeAST(node->factor.expression);
+				node->factor.expression = NULL;
 			}
 			if ( node->factor.unary != NULL ) {
 				freeAST(node->factor.unary);
+				node->factor.unary = NULL;
 			}
 			if ( node->factor.constant != NULL ) {
 				freeAST(node->factor.constant);
+				node->factor.constant = NULL;
 			}
+			break;
 		case AST_UNARY:
-			free(node->unary.value);
+			if (node->unary.value != NULL) {
+				free(node->unary.value);
+				node->unary.value = NULL;
+			}
 			break;
 		case AST_CONSTANT:
-			free(node->constant.value);
+			if (node->unary.value != NULL) {
+				free(node->constant.value);
+				node->constant.value = NULL;
+			}
 			break;
 		case AST_BINARY:
-			freeAST(node->binary.left);
-			freeAST(node->binary.right);
-			free(node->binary.value);
+			if (node->binary.left != NULL) {
+				freeAST(node->binary.left);
+				node->binary.left = NULL;
+			}
+			if (node->binary.right != NULL) {
+				freeAST(node->binary.right);
+				node->binary.right = NULL;
+			}
+			if (node->binary.value != NULL) {
+				free(node->binary.value);
+				node->binary.value = NULL;
+			}
+			break;
 		default:
 			break;
 	}
