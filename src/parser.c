@@ -200,6 +200,7 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 
 		// Parse right-hand side expression with higher precedence.
 		ASTNode *binNode = parseBinary(parser);
+		if (binNode == NULL) break;
 		ASTNode *right = parseExpression(parser, opPrec + 1);
 		binNode->binary.left = left;
 		binNode->binary.right = right;

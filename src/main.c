@@ -49,6 +49,10 @@ int main(int argc, char** argv) {
 	ASTNode *ast = parseProgram(&parser);
 	if (parser.errorFlag) {
 		printf("Do better.\n");
+		freeAST(ast);
+		freeTokens(tokens, token_count);
+		free((void *)basename);
+		free((void *)dir);
 		return 1;
 	}
 
@@ -68,6 +72,10 @@ int main(int argc, char** argv) {
 	FILE *file = fopen("asm.s", "w");
 	if (!file) {
 		perror("Failed to open asm.s for writing");
+		freeAST(ast);
+		freeTokens(tokens, token_count);
+		free((void *)basename);
+		free((void *)dir);
 		return 1;
 	}
 	fprintf(file, "%s", generator.sb.data);
@@ -82,6 +90,10 @@ int main(int argc, char** argv) {
     int ret = system(command);
 	if (ret != 0) {
 		fprintf(stderr, "Compilation failed with exit code %d\n", ret);
+		freeAST(ast);
+		freeTokens(tokens, token_count);
+		free((void *)basename);
+		free((void *)dir);
 		return ret;
 	}
 
@@ -93,6 +105,10 @@ int main(int argc, char** argv) {
     ret = system(exec);
 	if (ret != 0) {
 		fprintf(stderr, "Execution failed with %d\n", ret);
+		freeAST(ast);
+		freeTokens(tokens, token_count);
+		free((void *)basename);
+		free((void *)dir);
 		return ret;
 	}
 	char rm[256];
@@ -100,6 +116,10 @@ int main(int argc, char** argv) {
     ret = system(rm);
 	if (ret != 0) {
 		fprintf(stderr, "Deletion failed with %d\n", ret);
+		freeAST(ast);
+		freeTokens(tokens, token_count);
+		free((void *)basename);
+		free((void *)dir);
 		return ret;
 	}
 
