@@ -11,6 +11,16 @@ void reportError(Parser *parser, const char *message) {
     parser->errorFlag = 1;
 }
 
+int precedence(TokenType type) {
+	switch (type) {
+		case OP_MUL:
+		case OP_DIV:   return 2;
+		case OP_ADD:
+		case OP_NEGATION:    return 1;
+		default:            return 0;
+	}
+}
+
 // Get tokens, report an error
 void consume(Parser *parser, TokenType expected, const char *errorMsg) {
 	if (currentToken(parser)->type != expected) {
@@ -151,7 +161,7 @@ ASTNode *parseStatement(Parser* parser) {
 	}
 	consume(parser, KEYW_RETURN, "Return statement start");
 	ASTNode *node = newASTNode(AST_STATEMENT);
-	node->statement.expression = parseExpression(parser);
+	node->statement.expression = parseExpression(parser, 0);
 	if (parser->errorFlag) {
 		skip(parser);
 		return NULL;
@@ -165,7 +175,7 @@ ASTNode *parseStatement(Parser* parser) {
 	return node;
 }
 
-ASTNode *parseExpression(Parser* parser) {
+ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 	if (   currentToken(parser)->type != OP_COMPL
 		&& currentToken(parser)->type != OP_NEGATION
 		&& currentToken(parser)->type != OP_NEGATIONL
@@ -176,64 +186,30 @@ ASTNode *parseExpression(Parser* parser) {
 		return NULL;
 	}
 
-	ASTNode *node = newASTNode(AST_EXPRESSION);
-	ASTNode *term = parseTerm(parser);
-	if (term) {
-		node->expression.term = term;
+	ASTNode *left = parseFactor(parser);
+	if (!left) return NULL;
+
+	while (currentToken(parser)) {
+		Token *op = currentToken(parser);
+		int opPrec = precedence(op->type);
+
+		// Stop if operator's precedence is below the minimum,
+		// or if we hit a closing parenthesis or semicolon.
+		if (opPrec < minPrecedence || op->type == TOKEN_CPAREN|| op->type == TOKEN_SEMICOL)
+			break;
+
+		// Parse right-hand side expression with higher precedence.
+		ASTNode *binNode = parseBinary(parser);
+		ASTNode *right = parseExpression(parser, opPrec + 1);
+		binNode->binary.left = left;
+		binNode->binary.right = right;
+		left = binNode;
 	}
 
-	// TODO: currently can't parse full
-	//       expressions. something seems  
-    //       to be overwritten. need to
-	//       fix.
-	ASTNode *root = node; 
-	while (currentToken(parser)->type == OP_ADD ||
-		currentToken(parser)->type == OP_NEGATION) {
-		ASTNode *bin = parseBinary(parser);
-		bin->binary.left = node->expression.term != NULL ? node->expression.term : node->term.binary->binary.left;
-		term = parseTerm(parser);
-		bin->binary.right = term;
-		node->expression.binary = bin;
-		node->expression.term = NULL;
-		node = term;
-	}
+	// TODO: currently, bug exists that causes a stack overflow 
+	//       when using parentheses. Fix.
+	return left;
 
-	// Found seemingly elegant solution to operator parsing:
-	// https://en.wikipedia.org/wiki/Shunting_yard_algorithm
-	// TODO: refactor to implement this.
-	return root;
-}
-
-ASTNode *parseTerm(Parser* parser) {
-	if (   currentToken(parser)->type != OP_COMPL
-		&& currentToken(parser)->type != OP_NEGATION
-		&& currentToken(parser)->type != OP_NEGATIONL
-		&& currentToken(parser)->type != LITERAL_INT
-		&& currentToken(parser)->type != TOKEN_OPAREN) {
-		reportError(parser, "Invalid term provided");
-		skip(parser);
-		return NULL;
-	}
-
-	ASTNode *node = newASTNode(AST_TERM);
-	ASTNode *factor = parseFactor(parser);
-	if (factor) {
-		node->term.factor = factor;
-	}
-
-	ASTNode *root = node; 
-	while (currentToken(parser)->type == OP_MUL ||
-		currentToken(parser)->type == OP_DIV) {
-		ASTNode* bin = parseBinary(parser);
-		bin->binary.left = node->term.factor != NULL ? node->term.factor : node->factor.constant;
-		factor = parseFactor(parser);
-		bin->binary.right = factor; 
-		node->term.binary = bin;
-		node->term.factor = NULL;
-		node = factor;
-	}
-	printf("Value: %s\n", factor->factor.constant->constant.value);
-	return root;
 }
 
 ASTNode *parseFactor(Parser* parser) {
@@ -241,9 +217,9 @@ ASTNode *parseFactor(Parser* parser) {
 	node->factor.expression = NULL;
 	node->factor.unary = NULL;
 	node->factor.constant = NULL;
-	if (currentToken(parser)->type == TOKEN_OBRACE) {
-		node->factor.expression = parseExpression(parser);
-		consume(parser, TOKEN_CBRACE, "Expected closing bracket at end of expression");
+	if (currentToken(parser)->type == TOKEN_OPAREN) {
+		node->factor.expression = parseExpression(parser, 0);
+		consume(parser, TOKEN_CPAREN, "Expected closing bracket at end of expression");
 		return node;
 	}
 
@@ -365,15 +341,6 @@ void printAST(ASTNode *node, int indent) {
 			} 
 			if (node->expression.binary != NULL) {
 				printAST(node->expression.binary, indent + 1);
-			}
-			break;
-		case AST_TERM:
-			printf("Factors:\n");
-			if (node->term.factor != NULL) {
-				printAST(node->term.factor, indent);
-			}
-			if (node->term.binary != NULL) {
-				printAST(node->term.binary, indent + 1);
 			}
 			break;
 		case AST_FACTOR:
