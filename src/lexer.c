@@ -98,6 +98,10 @@ Token* lexerNextToken(Lexer* l) {
 		}
 		if (c == '!') {
 			l->pos++;
+			if (l->pos + 1 < strlen(l->input) && l->input[l->pos + 1] == '=') {
+				l->pos++;
+				return createToken(OP_NOTEQ, "!=");
+			}
 			return createToken(OP_NEGATIONL, "!");
 		}
 
@@ -113,6 +117,45 @@ Token* lexerNextToken(Lexer* l) {
 		if (c == '/') {
 			l->pos++;
 			return createToken(OP_DIV, "/");
+		}
+
+		// Logical operators:
+		if (c == '=') {
+			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
+				l->pos++;
+				return createToken(OP_EQ, "==");
+			}
+		}
+		if (c == '&') {
+			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '&') {
+				l->pos++;
+				return createToken(OP_AND, "&&");
+			}
+		}
+		if (c == '|') {
+			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '|') {
+				l->pos++;
+				return createToken(OP_OR, "||");
+			}
+		}
+		if (c == '<') {
+			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
+				l->pos++;
+				return createToken(OP_LESSEQ, "<=");
+			}
+			return createToken(OP_LESS, "<");
+		}
+		if (c == '>') {
+			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
+				l->pos++;
+				return createToken(OP_GREATEREQ, ">=");
+			}
+			return createToken(OP_GREATER, ">");
 		}
 
 		// Identifier/Keyword:

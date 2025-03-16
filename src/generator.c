@@ -5,6 +5,7 @@
 #include "parser.h"
 #include "generator.h"
 
+int labelCount = 0;
 void initStringBuffer(StringBuffer *sb) {
 	sb->capacity = 256;
 	sb->length = 0;
@@ -79,27 +80,130 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				<CODE FOR e2 GOES HERE>
 				pop %ecx ; pop e1 from the stack into ecx
 				addl %ecx, %eax ; add e1 to e2, save results in eax
+
+				x86 code for comparisons:
+				<CODE FOR e1 GOES HERE>
+				push   %eax          ; save value of e1 on the stack
+				<CODE FOR e2 GOES HERE>
+				pop    %ecx          ; pop e1 from the stack into ecx - e2 is already in eax
+				cmpl   %eax, %ecx    ;set ZF on if e1 == e2, set it off otherwise
+				movl   $0, %eax      ;zero out EAX (doesn't change FLAGS)
+				sete   %al           ;set AL register (the lower byte of EAX) to 1 iff ZF is on
 			*/
-			generateX86(gen, node->binary.left);
-			appendString(&gen->sb, "    push %eax\n");
-			generateX86(gen, node->binary.right);
-			appendString(&gen->sb, "    pop %ecx\n");
 			if (!(strcmp(node->binary.value, "+"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
 				appendString(&gen->sb, "    addl %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "-"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
 				appendString(&gen->sb, "    subl %eax, %ecx\n");
 				appendString(&gen->sb, "    movl %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "*"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
 				appendString(&gen->sb, "    imul %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "/"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
 				appendString(&gen->sb, "    xorl %ecx, %eax\n");
 				appendString(&gen->sb, "    xorl %eax, %ecx\n");
 				appendString(&gen->sb, "    xorl %ecx, %eax\n");
 				appendString(&gen->sb, "    cdq\n");
 				appendString(&gen->sb, "    idivl %ecx\n");
+			}
+			if (!(strcmp(node->binary.value, "<="))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
+				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setle %al\n");
+			}
+			if (!(strcmp(node->binary.value, "<"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
+				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setl %al\n");
+			}
+			if (!(strcmp(node->binary.value, ">="))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push   %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop    %ecx\n");
+				appendString(&gen->sb, "    cmpl   %eax, %ecx\n");
+				appendString(&gen->sb, "    movl   $0, %eax\n");
+				appendString(&gen->sb, "    setge  %al\n");
+			}
+			if (!(strcmp(node->binary.value, ">"))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop   %ecx\n");
+				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setg  %al\n");
+			}
+			if (!(strcmp(node->binary.value, "=="))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
+				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    sete %al\n");
+			}
+			if (!(strcmp(node->binary.value, "!="))) {
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    push %eax\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    pop %ecx\n");
+				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setne %al\n");
+			}
+			if (!(strcmp(node->binary.value, "&&"))) {
+				labelCount++;
+				char label[256];
+				//strcat(label);
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    cmpl $0, %eax\n");
+				appendString(&gen->sb, "    jne _clause2\n");
+				appendString(&gen->sb, "    movl $1, %eax\n");
+				appendString(&gen->sb, "    jmp _end\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    cmpl  $0, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setne %al\n");
+			}
+			if (!(strcmp(node->binary.value, "||"))) {
+				labelCount++;
+				char label[256];
+				//strcat(label);
+				generateX86(gen, node->binary.left);
+				appendString(&gen->sb, "    cmpl $0, %eax\n");
+				appendString(&gen->sb, "    je _clause2\n");
+				appendString(&gen->sb, "    movl $1, %eax\n");
+				appendString(&gen->sb, "    jmp _end\n");
+				generateX86(gen, node->binary.right);
+				appendString(&gen->sb, "    cmpl  $0, %ecx\n");
+				appendString(&gen->sb, "    movl  $0, %eax\n");
+				appendString(&gen->sb, "    setne %al\n");
 			}
 			break;
 		}

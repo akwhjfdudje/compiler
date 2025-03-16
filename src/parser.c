@@ -14,9 +14,17 @@ void reportError(Parser *parser, const char *message) {
 int precedence(TokenType type) {
 	switch (type) {
 		case OP_MUL:
-		case OP_DIV:   return 2;
+		case OP_DIV:        return 6;
 		case OP_ADD:
-		case OP_NEGATION:    return 1;
+		case OP_NEGATION:   return 5;
+		case OP_LESS:
+		case OP_LESSEQ:
+		case OP_GREATER:
+		case OP_GREATEREQ:  return 4;
+		case OP_EQ:
+		case OP_NOTEQ:      return 3;
+		case OP_AND:        return 2;
+		case OP_OR:         return 1;
 		default:            return 0;
 	}
 }
@@ -267,36 +275,38 @@ ASTNode *parseUnary(Parser* parser) {
 }
 
 ASTNode *parseBinary(Parser* parser) {
-	if (currentToken(parser)->type != OP_ADD
-		&& currentToken(parser)->type != OP_MUL
-		&& currentToken(parser)->type != OP_DIV
-		&& currentToken(parser)->type != OP_NEGATION) {
+	if (currentToken(parser)->type < OP_NEGATION || currentToken(parser)->type >= TOKEN_EOF) {
 		reportError(parser, "Expected operator in expression");
 		skip(parser);
 		return NULL;
 	}
 	ASTNode *node = newASTNode(AST_BINARY);
-	if (currentToken(parser)->type == OP_ADD) {
-		node->binary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_ADD, "Before expression");
-		return node;
-	}
-	if (currentToken(parser)->type == OP_MUL) {
-		node->binary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_MUL, "Before expression");
-		return node;
-	}
-	if (currentToken(parser)->type == OP_NEGATION) {
-		node->binary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_NEGATION, "Before expression");
-		return node;
-	}
-	if (currentToken(parser)->type == OP_DIV) {
-		node->binary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_DIV, "Before expression");
-		return node;
-	}
+	node->binary.value = strdup(currentToken(parser)->value);
+	consume(parser, currentToken(parser)->type, "Before expression");
 	return node;
+	/*
+		if (currentToken(parser)->type == OP_ADD) {
+			node->binary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_ADD, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_MUL) {
+			node->binary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_MUL, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_NEGATION) {
+			node->binary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_NEGATION, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_DIV) {
+			node->binary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_DIV, "Before expression");
+			return node;
+		}
+		return node;
+	*/
 }
 
 ASTNode *parseConstant(Parser* parser) {

@@ -16,6 +16,7 @@ int main(int argc, char** argv) {
   		fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
 		return 1;
 	}
+
 	const char *cFile = argv[1];
 	char *dir = getDirectory(cFile);
 	const char *basename = getBasename(cFile);
