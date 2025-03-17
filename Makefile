@@ -22,6 +22,9 @@ parser.o: src/parser.c
 generator.o: src/generator.c
 	@gcc $(CFLAGS) -c src/generator.c -o bin/generator.o
 
+data.o: src/data.c
+	@gcc $(CFLAGS) -c src/data.c -o bin/data.o
+
 main.o: src/main.c
 	@gcc $(CFLAGS) -c src/main.c -o bin/main.o
 
