@@ -162,20 +162,25 @@ ASTNode *parseBlock(Parser* parser) {
 }
 
 ASTNode *parseStatement(Parser* parser) {
-	consume(parser, KEYW_RETURN, "Return statement start");
-	ASTNode *node = newASTNode(AST_STATEMENT);
-	node->statement.expression = parseExpression(parser, 0);
-	if (parser->errorFlag) {
-		skip(parser);
-		return NULL;
+	if (currentToken(parser)->type == KEYW_RETURN) {
+		consume(parser, KEYW_RETURN, "Return statement start");
+		ASTNode *node = newASTNode(AST_STATEMENT);
+		node->statement.expression = parseExpression(parser, 0);
+		if (parser->errorFlag) {
+			skip(parser);
+			return NULL;
+		}
+		if (currentToken(parser)->type != TOKEN_SEMICOL) {
+			reportError(parser, "Expected ';' after expression");
+			skip(parser);
+			return NULL;
+		}
+		consume(parser, TOKEN_SEMICOL, "After expression");
+		return node;
 	}
-	if (currentToken(parser)->type != TOKEN_SEMICOL) {
-		reportError(parser, "Expected ';' after expression");
-		skip(parser);
-		return NULL;
-	}
-	consume(parser, TOKEN_SEMICOL, "After expression");
-	return node;
+	reportError(parser, "Expected return keyword");
+	skip(parser);
+	return NULL;
 }
 
 ASTNode *parseDeclaration(Parser* parser) {
