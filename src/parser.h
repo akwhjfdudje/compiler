@@ -39,6 +39,7 @@ typedef struct ASTNode {
 		// AST_STATEMENT: simple expression
 		struct {
 			struct ASTNode *expression;
+			struct ASTNode *declaration;
 		} statement;
 
 		// AST_DECL: declaration 

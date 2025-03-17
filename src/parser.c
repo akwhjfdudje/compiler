@@ -166,6 +166,7 @@ ASTNode *parseStatement(Parser* parser) {
 		consume(parser, KEYW_RETURN, "Return statement start");
 		ASTNode *node = newASTNode(AST_STATEMENT);
 		node->statement.expression = parseExpression(parser, 0);
+		node->statement.declaration = NULL;
 		if (parser->errorFlag) {
 			skip(parser);
 			return NULL;
@@ -178,9 +179,21 @@ ASTNode *parseStatement(Parser* parser) {
 		consume(parser, TOKEN_SEMICOL, "After expression");
 		return node;
 	}
-	reportError(parser, "Expected return keyword");
-	skip(parser);
-	return NULL;
+	if (currentToken(parser)->type == KEYW_INT) {
+		ASTNode *node = newASTNode(AST_STATEMENT);
+		node->statement.declaration = parseDeclaration(parser);
+		node->statement.expression = NULL;
+		return node;
+	}
+	ASTNode *node = newASTNode(AST_STATEMENT);
+	node->statement.expression = parseExpression(parser, 0);
+	node->statement.declaration = NULL;
+	if (node->statement.expression == NULL) {
+		reportError(parser, "Invalid expression");
+		skip(parser);
+		return NULL;
+	}
+	return node;
 }
 
 ASTNode *parseDeclaration(Parser* parser) {
@@ -190,26 +203,28 @@ ASTNode *parseDeclaration(Parser* parser) {
 		return NULL;
 	}
 	consume(parser, KEYW_INT, "Declaration start");
-	if (currentToken(parser)->type != OP_ASSN
+	ASTNode *node = newASTNode(AST_DECL);
+	node->decl.identifier = parseIdentifier(parser);
+	if (currentToken(parser)->type == OP_ASSN) {
+		consume(parser, OP_ASSN, "Start of assignment");
+		node->decl.initializer = parseExpression(parser, 0);
+		node->decl.type = "int";
+		consume(parser, TOKEN_SEMICOL, "End of declaration");
+		return node;
+	}
+	if (currentToken(parser)->type == TOKEN_SEMICOL) {
+		node->decl.initializer = NULL;
+		node->decl.type = "int";
+		consume(parser, TOKEN_SEMICOL, "End of declaration");
+		return node;
+	}
+	if (   currentToken(parser)->type != OP_ASSN
 		&& currentToken(parser)->type != TOKEN_SEMICOL) {
 		reportError(parser, "Expected assignment or declaration");
 		skip(parser);
 		return NULL;
 	}
-	if (currentToken(parser)->type == OP_ASSN) {
-		consume(parser, OP_ASSN, "Start of assignment");
-		ASTNode *node = newASTNode(AST_EXPRESSION);
-		node->statement.expression = parseExpression(parser, 0);
-		return node;
-	}
-	if (currentToken(parser)->type == TOKEN_SEMICOL) {
-		consume(parser, TOKEN_SEMICOL, "Start of declaration");
-		ASTNode *node = newASTNode(AST_DECL);
-		node->decl.identifier = parseIdentifier(parser);
-		node->decl.initializer = NULL;
-		node->decl.type = "int";
-		return node;
-	}
+	return NULL;
 }
 
 ASTNode *parseExpression(Parser* parser, int minPrecedence) {
@@ -217,7 +232,8 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		&& currentToken(parser)->type != OP_NEGATION
 		&& currentToken(parser)->type != OP_NEGATIONL
 		&& currentToken(parser)->type != LITERAL_INT
-		&& currentToken(parser)->type != TOKEN_OPAREN) {
+		&& currentToken(parser)->type != TOKEN_OPAREN
+		&& currentToken(parser)->type != TOKEN_IDENTIFIER) {
 		reportError(parser, "Invalid expression provided");
 		skip(parser);
 		return NULL;
@@ -245,7 +261,6 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 	}
 
 	return left;
-
 }
 
 ASTNode *parseFactor(Parser* parser) {
@@ -391,7 +406,8 @@ void printAST(ASTNode *node, int indent) {
 			break;
 		case AST_STATEMENT:
 			printf("Statement:\n");
-			printAST(node->statement.expression, indent + 1);
+			if (node->statement.expression != NULL ) printAST(node->statement.expression, indent + 1);
+			if (node->statement.declaration != NULL ) printAST(node->statement.declaration, indent + 1);
 			break;
 		case AST_EXPRESSION:
 			printf("Terms:\n");
@@ -402,12 +418,30 @@ void printAST(ASTNode *node, int indent) {
 				printAST(node->expression.binary, indent + 1);
 			}
 			break;
+		case AST_DECL:
+			printf("Declaration:\n");
+			for (int i = 0; i < indent + 1; i++) printf("  ");
+			printf("|__");
+			if (node->decl.type != NULL ) {
+				printf("Type: %s\n", node->decl.type);
+			}
+			if (node->decl.identifier != NULL) {
+				printAST(node->decl.identifier, indent + 1);
+			}
+			if (node->decl.initializer != NULL) {
+				for (int i = 0; i < indent + 1; i++) printf("  ");
+				printf("|__");
+				printf("Initialized as:\n");
+				printAST(node->decl.initializer, indent + 2);
+			}
+			break;
 		case AST_FACTOR:
 			printf("Factor:\n");
 			if (node->factor.expression != NULL) printAST(node->factor.expression, indent + 1);	
 			if (node->factor.unary != NULL) printAST(node->factor.unary, indent + 1);	
 			if (node->factor.constant != NULL) printAST(node->factor.constant, indent + 1);	
 			if (node->factor.factor != NULL) printAST(node->factor.factor, indent + 1);
+			if (node->factor.identifier != NULL) printAST(node->factor.identifier, indent + 1);
 			break;
 		case AST_CONSTANT:
 			printf("Constant: %s\n", node->constant.value);
@@ -425,6 +459,9 @@ void printAST(ASTNode *node, int indent) {
 			printf("|__");
 			printf("Right:\n");
 			printAST(node->binary.right, indent + 1);
+			break;
+		case AST_IDENTIFIER:
+			printf("Name: %s\n", node->identifier.value);
 			break;
 		default:
 			printf("Unknown AST Node\n");

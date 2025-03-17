@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 	// Parse the tokens into an AST.
 	ASTNode *ast = parseProgram(&parser);
 	if (parser.errorFlag) {
-		printf("Do better.\n");
+		//printf("Do better.\n");
 		freeAST(ast);
 		freeTokens(tokens, token_count);
 		free((void *)basename);
