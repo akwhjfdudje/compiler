@@ -25,6 +25,7 @@ typedef enum{
 	OP_LESSEQ,
 	OP_GREATER,
 	OP_GREATEREQ,
+	OP_ASSN,
 	TOKEN_EOF,
 	TOKEN_INVALID,
 } TokenType;

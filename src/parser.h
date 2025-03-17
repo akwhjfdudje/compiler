@@ -6,11 +6,12 @@ typedef enum {
 	AST_FUNCTION,
 	AST_BLOCK,
 	AST_STATEMENT,
+	AST_DECL,
 	AST_EXPRESSION,
 	AST_CONSTANT,
 	AST_UNARY,
 	AST_BINARY,
-	AST_TERM,
+	AST_IDENTIFIER,
 	AST_FACTOR
 } ASTNodeType;
 
@@ -40,6 +41,13 @@ typedef struct ASTNode {
 			struct ASTNode *expression;
 		} statement;
 
+		// AST_DECL: declaration 
+		struct {
+			char *type;
+			struct ASTNode *identifier;
+			struct ASTNode *initializer;
+		} decl;
+
 		// AST_EXPRESSION: contains two more sub-expressions
 		struct {
 			struct ASTNode *term;
@@ -52,6 +60,7 @@ typedef struct ASTNode {
 			struct ASTNode *factor;
 			struct ASTNode *unary;
 			struct ASTNode *constant;
+			struct ASTNode *identifier;
 		} factor;
 		// AST_CONSTANT: numeric constant (as string)
 		struct {
@@ -62,6 +71,11 @@ typedef struct ASTNode {
 		struct {
 			char *value;
 		} unary;
+
+		// AST_IDENTIFIER: identifier 
+		struct {
+			char *value;
+		} identifier;
 
 		// AST_BINARY: binary operator (as string)
 		struct {
@@ -85,12 +99,13 @@ ASTNode *parseProgram(Parser* parser);
 ASTNode *parseFunction(Parser* parser);
 ASTNode *parseBlock(Parser* parser);
 ASTNode *parseStatement(Parser* parser);
+ASTNode *parseDeclaration(Parser* parser);
 ASTNode *parseExpression(Parser* parser, int precedence);
 ASTNode *parseUnary(Parser* parser);
 ASTNode *parseBinary(Parser* parser);
-ASTNode *parseTerm(Parser* parser);
 ASTNode *parseFactor(Parser* parser);
 ASTNode *parseConstant(Parser* parser);
+ASTNode *parseIdentifier(Parser *parser);
 int precedence(TokenType type);
 void consume(Parser* parser, TokenType expected, const char *errorMsg);
 Token *currentToken(Parser *parser);

@@ -162,11 +162,6 @@ ASTNode *parseBlock(Parser* parser) {
 }
 
 ASTNode *parseStatement(Parser* parser) {
-	if (currentToken(parser)->type != KEYW_RETURN) {
-		reportError(parser, "Expected return keyword in statement");
-		skip(parser);
-		return NULL;
-	}
 	consume(parser, KEYW_RETURN, "Return statement start");
 	ASTNode *node = newASTNode(AST_STATEMENT);
 	node->statement.expression = parseExpression(parser, 0);
@@ -183,6 +178,35 @@ ASTNode *parseStatement(Parser* parser) {
 	return node;
 }
 
+ASTNode *parseDeclaration(Parser* parser) {
+	if (currentToken(parser)->type != KEYW_INT) {
+		reportError(parser, "Expected int keyword in declaration");
+		skip(parser);
+		return NULL;
+	}
+	consume(parser, KEYW_INT, "Declaration start");
+	if (currentToken(parser)->type != OP_ASSN
+		&& currentToken(parser)->type != TOKEN_SEMICOL) {
+		reportError(parser, "Expected assignment or declaration");
+		skip(parser);
+		return NULL;
+	}
+	if (currentToken(parser)->type == OP_ASSN) {
+		consume(parser, OP_ASSN, "Start of assignment");
+		ASTNode *node = newASTNode(AST_EXPRESSION);
+		node->statement.expression = parseExpression(parser, 0);
+		return node;
+	}
+	if (currentToken(parser)->type == TOKEN_SEMICOL) {
+		consume(parser, TOKEN_SEMICOL, "Start of declaration");
+		ASTNode *node = newASTNode(AST_DECL);
+		node->decl.identifier = parseIdentifier(parser);
+		node->decl.initializer = NULL;
+		node->decl.type = "int";
+		return node;
+	}
+}
+
 ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 	if (   currentToken(parser)->type != OP_COMPL
 		&& currentToken(parser)->type != OP_NEGATION
@@ -195,7 +219,7 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 	}
 
 	ASTNode *left = parseFactor(parser);
-	if (!left) return NULL;
+	if (left == NULL) return NULL;
 
 	while (currentToken(parser)) {
 		Token *op = currentToken(parser);
@@ -224,6 +248,7 @@ ASTNode *parseFactor(Parser* parser) {
 	node->factor.expression = NULL;
 	node->factor.unary = NULL;
 	node->factor.constant = NULL;
+	node->factor.identifier = NULL;
 	if (currentToken(parser)->type == TOKEN_OPAREN) {
 		consume(parser, TOKEN_OPAREN, "At expression start");
 		node->factor.expression = parseExpression(parser, 0);
@@ -241,6 +266,10 @@ ASTNode *parseFactor(Parser* parser) {
 	
 	if (currentToken(parser)->type == LITERAL_INT) {
 		node->factor.constant = parseConstant(parser);
+		return node;
+	}
+	if (currentToken(parser)->type == TOKEN_IDENTIFIER) {
+		node->factor.identifier = parseIdentifier(parser);
 		return node;
 	}
 	reportError(parser, "Invalid factor");
@@ -319,6 +348,19 @@ ASTNode *parseConstant(Parser* parser) {
 	node->constant.value = strdup(currentToken(parser)->value);
 	consume(parser, LITERAL_INT, "After constant");
 	return node;
+}
+
+ASTNode *parseIdentifier(Parser *parser) {
+	if (currentToken(parser)->type != TOKEN_IDENTIFIER) {
+		reportError(parser, "Expected identifier");
+		skip(parser);
+		return NULL;
+	}
+	ASTNode *node = newASTNode(AST_IDENTIFIER);
+	node->constant.value = strdup(currentToken(parser)->value);
+	consume(parser, TOKEN_IDENTIFIER, "After identifier");
+	return node;
+
 }
 
 /* --- AST Printing for Debug --- */

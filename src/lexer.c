@@ -30,8 +30,6 @@ Token* createToken(TokenType type, char* value){
 	Token* t = malloc(sizeof(Token));
 	t->type = type;
 	t->value = value;
-	// jesse_shooting_gun.gif:
-	//free(value);
 	return t;
 }
 
@@ -98,7 +96,7 @@ Token* lexerNextToken(Lexer* l) {
 		}
 		if (c == '!') {
 			l->pos++;
-			if (l->pos + 1 < strlen(l->input) && l->input[l->pos + 1] == '=') {
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
 				l->pos++;
 				return createToken(OP_NOTEQ, "!=");
 			}
@@ -126,6 +124,7 @@ Token* lexerNextToken(Lexer* l) {
 				l->pos++;
 				return createToken(OP_EQ, "==");
 			}
+			return createToken(OP_ASSN, "=");
 		}
 		if (c == '&') {
 			l->pos++;

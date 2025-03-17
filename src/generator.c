@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 #include "parser.h"
 #include "generator.h"
 
@@ -32,6 +33,10 @@ void appendFormat(StringBuffer *sb, const char *format, ...) {
 	vsnprintf(temp, sizeof(temp), format, args);
 	va_end(args);
 	appendString(sb, temp);
+}
+
+void makeLabel(char *label, int id) {
+	snprintf(label, 256, "_LLLL%d", id);
 }
 
 void generateX86(CodeGenerator *gen, ASTNode *node) {
@@ -180,35 +185,56 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			if (!(strcmp(node->binary.value, "&&"))) {
 				labelCount++;
 				char label[256];
-				//strcat(label);
+				makeLabel(label, labelCount);
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    cmpl $0, %eax\n");
-				appendString(&gen->sb, "    jne _clause2\n");
-				appendString(&gen->sb, "    movl $1, %eax\n");
-				appendString(&gen->sb, "    jmp _end\n");
+				appendString(&gen->sb, "    cmpl   $0, %eax\n");
+				appendString(&gen->sb, "    jne   ");
+				appendString(&gen->sb, label);
+				appendString(&gen->sb, "\n");
+				labelCount++;
+				char label2[256];
+				makeLabel(label2, labelCount);
+				appendString(&gen->sb, "    jmp   ");
+				appendString(&gen->sb, label2);
+				appendString(&gen->sb, "\n");
+				appendString(&gen->sb, label);
+				appendString(&gen->sb, ":\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    cmpl  $0, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setne %al\n");
+				appendString(&gen->sb, "    cmpl   $0, %eax\n");
+				appendString(&gen->sb, "    movl   $0, %eax\n");
+				appendString(&gen->sb, "    setne  %al\n");
+				appendString(&gen->sb, label2);
+				appendString(&gen->sb, ":\n");
 			}
 			if (!(strcmp(node->binary.value, "||"))) {
 				labelCount++;
 				char label[256];
-				//strcat(label);
+				makeLabel(label, labelCount);
 				generateX86(gen, node->binary.left);
 				appendString(&gen->sb, "    cmpl $0, %eax\n");
-				appendString(&gen->sb, "    je _clause2\n");
+				appendString(&gen->sb, "    je ");
+				appendString(&gen->sb, label);
+				appendString(&gen->sb, "\n");
 				appendString(&gen->sb, "    movl $1, %eax\n");
-				appendString(&gen->sb, "    jmp _end\n");
+				labelCount++;
+				char label2[256];
+				makeLabel(label2, labelCount);
+				appendString(&gen->sb, "    jmp ");
+				appendString(&gen->sb, label2);
+				appendString(&gen->sb, "\n");
+				appendString(&gen->sb, label);
+				appendString(&gen->sb, ":\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    cmpl  $0, %ecx\n");
+				appendString(&gen->sb, "    cmpl  $0, %eax\n");
 				appendString(&gen->sb, "    movl  $0, %eax\n");
 				appendString(&gen->sb, "    setne %al\n");
+				appendString(&gen->sb, label2);
+				appendString(&gen->sb, ":\n");
 			}
 			break;
 		}
 		case AST_CONSTANT: {
-			appendFormat(&gen->sb, "    movl $%s, %%eax\n", node->constant.value);
+			appendFormat(&gen->sb, "    movl   $%s, %%eax\n", node->constant.value);
 			break;
 		}
 		case AST_UNARY: {
