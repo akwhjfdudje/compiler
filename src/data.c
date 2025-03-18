@@ -7,7 +7,7 @@
 static size_t hash(const char* key, size_t capacity) {
     size_t hash_value = 0;
     for (size_t i = 0; key[i] != '\0'; i++) {
-		hash_value = (hash_value * 31) + key[i];  // Using a prime number multiplier
+		hash_value = (hash_value * 31) + key[i];
 	}
     return hash_value % capacity;
 }

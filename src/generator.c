@@ -88,7 +88,6 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 		case AST_DECL: {
 			// Check existence:
 			if (!m) {
-				printf("Atrocity committed this many times\n");
 				varmap = createHashmap(64);
 				m = 1;
 			}
@@ -132,98 +131,98 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			*/
 			if (!(strcmp(node->binary.value, "+"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    addl %ecx, %eax\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    addl      %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "-"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    subl %eax, %ecx\n");
-				appendString(&gen->sb, "    movl %ecx, %eax\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    subl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "*"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    imul %ecx, %eax\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    imul      %ecx, %eax\n");
 			}
 			if (!(strcmp(node->binary.value, "/"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    xorl %ecx, %eax\n");
-				appendString(&gen->sb, "    xorl %eax, %ecx\n");
-				appendString(&gen->sb, "    xorl %ecx, %eax\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    xorl      %ecx, %eax\n");
+				appendString(&gen->sb, "    xorl      %eax, %ecx\n");
+				appendString(&gen->sb, "    xorl      %ecx, %eax\n");
 				appendString(&gen->sb, "    cdq\n");
-				appendString(&gen->sb, "    idivl %ecx\n");
+				appendString(&gen->sb, "    idivl     %ecx\n");
 			}
 			if (!(strcmp(node->binary.value, "<="))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setle %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    setle     %al\n");
 			}
 			if (!(strcmp(node->binary.value, "<"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setl %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    setl      %al\n");
 			}
 			if (!(strcmp(node->binary.value, ">="))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push   %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop    %ecx\n");
-				appendString(&gen->sb, "    cmpl   %eax, %ecx\n");
-				appendString(&gen->sb, "    movl   $0, %eax\n");
-				appendString(&gen->sb, "    setge  %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    setge     %al\n");
 			}
 			if (!(strcmp(node->binary.value, ">"))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop   %ecx\n");
-				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setg  %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    setg      %al\n");
 			}
 			if (!(strcmp(node->binary.value, "=="))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    sete %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    sete      %al\n");
 			}
 			if (!(strcmp(node->binary.value, "!="))) {
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    push %eax\n");
+				appendString(&gen->sb, "    push      %eax\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    pop %ecx\n");
-				appendString(&gen->sb, "    cmpl  %eax, %ecx\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setne %al\n");
+				appendString(&gen->sb, "    pop       %ecx\n");
+				appendString(&gen->sb, "    cmpl      %eax, %ecx\n");
+				appendString(&gen->sb, "    movl      $0, %eax\n");
+				appendString(&gen->sb, "    setne     %al\n");
 			}
 			if (!(strcmp(node->binary.value, "&&"))) {
 				labelCount++;
 				char label[256];
 				makeLabel(label, labelCount);
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    cmpl   $0, %eax\n");
-				appendString(&gen->sb, "    jne   ");
+				appendString(&gen->sb, "    cmpl     $0, %eax\n");
+				appendString(&gen->sb, "    jne     ");
 				appendString(&gen->sb, label);
 				appendString(&gen->sb, "\n");
 				labelCount++;
@@ -235,9 +234,9 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, label);
 				appendString(&gen->sb, ":\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    cmpl   $0, %eax\n");
-				appendString(&gen->sb, "    movl   $0, %eax\n");
-				appendString(&gen->sb, "    setne  %al\n");
+				appendString(&gen->sb, "    cmpl     $0, %eax\n");
+				appendString(&gen->sb, "    movl     $0, %eax\n");
+				appendString(&gen->sb, "    setne    %al\n");
 				appendString(&gen->sb, label2);
 				appendString(&gen->sb, ":\n");
 			}
@@ -246,23 +245,23 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				char label[256];
 				makeLabel(label, labelCount);
 				generateX86(gen, node->binary.left);
-				appendString(&gen->sb, "    cmpl $0, %eax\n");
-				appendString(&gen->sb, "    je ");
+				appendString(&gen->sb, "    cmpl     $0, %eax\n");
+				appendString(&gen->sb, "    je     ");
 				appendString(&gen->sb, label);
 				appendString(&gen->sb, "\n");
-				appendString(&gen->sb, "    movl $1, %eax\n");
+				appendString(&gen->sb, "    movl     $1, %eax\n");
 				labelCount++;
 				char label2[256];
 				makeLabel(label2, labelCount);
-				appendString(&gen->sb, "    jmp ");
+				appendString(&gen->sb, "    jmp    ");
 				appendString(&gen->sb, label2);
 				appendString(&gen->sb, "\n");
 				appendString(&gen->sb, label);
 				appendString(&gen->sb, ":\n");
 				generateX86(gen, node->binary.right);
-				appendString(&gen->sb, "    cmpl  $0, %eax\n");
-				appendString(&gen->sb, "    movl  $0, %eax\n");
-				appendString(&gen->sb, "    setne %al\n");
+				appendString(&gen->sb, "    cmpl     $0, %eax\n");
+				appendString(&gen->sb, "    movl     $0, %eax\n");
+				appendString(&gen->sb, "    setne    %al\n");
 				appendString(&gen->sb, label2);
 				appendString(&gen->sb, ":\n");
 			}
@@ -270,19 +269,17 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				generateX86(gen, node->binary.right);
 				struct ASTNode* l = node->binary.left;
 				if (l->type != AST_FACTOR) {
-					printf("Uh oh.\n");
+					printf("Compile error: expected variable, found expression.\n");
 					return;
 				}
-				printf("Here.\n");
-				printf("Type of node: %s", l->factor.identifier->identifier.value);
 				if (l->factor.identifier == NULL) {
 					printf("Compile error: invalid assignment; expected variable.\n");
 					return;
 				}
-				const char *id = l->identifier.value;
+				const char *id = l->factor.identifier->identifier.value;
 				int varOffset = getHash(varmap, id);
 				char offset[32];
-				snprintf(offset, 32, "    movl %%eax, %d(%%ebp)", varOffset);
+				snprintf(offset, 32, "    movl     %%eax, %d(%%ebp)\n", varOffset);
 				appendString(&gen->sb, offset);
 			}
 			break;
@@ -313,7 +310,6 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			char offset[32];
 			snprintf(offset, 32, "    movl %d(%%ebp), %%eax", varOffset);
 			appendString(&gen->sb, offset);
-
 		}
 		default:
 			appendString(&gen->sb, "    # Unknown AST Node\n");
