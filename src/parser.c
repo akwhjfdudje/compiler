@@ -14,17 +14,18 @@ void reportError(Parser *parser, const char *message) {
 int precedence(TokenType type) {
 	switch (type) {
 		case OP_MUL:
-		case OP_DIV:        return 6;
+		case OP_DIV:        return 7;
 		case OP_ADD:
-		case OP_NEGATION:   return 5;
+		case OP_NEGATION:   return 6;
 		case OP_LESS:
 		case OP_LESSEQ:
 		case OP_GREATER:
-		case OP_GREATEREQ:  return 4;
+		case OP_GREATEREQ:  return 5;
 		case OP_EQ:
-		case OP_NOTEQ:      return 3;
-		case OP_AND:        return 2;
-		case OP_OR:         return 1;
+		case OP_NOTEQ:      return 4;
+		case OP_AND:        return 3;
+		case OP_OR:         return 2;
+		case OP_ASSN:       return 1;
 		default:            return 0;
 	}
 }
@@ -193,6 +194,12 @@ ASTNode *parseStatement(Parser* parser) {
 		skip(parser);
 		return NULL;
 	}
+	if (currentToken(parser)->type != TOKEN_SEMICOL) {
+		reportError(parser, "Expected ';' after expression");
+		skip(parser);
+		return NULL;
+	}
+	consume(parser, TOKEN_SEMICOL, "After expression");
 	return node;
 }
 
@@ -233,14 +240,18 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		&& currentToken(parser)->type != OP_NEGATIONL
 		&& currentToken(parser)->type != LITERAL_INT
 		&& currentToken(parser)->type != TOKEN_OPAREN
-		&& currentToken(parser)->type != TOKEN_IDENTIFIER) {
+		&& currentToken(parser)->type != TOKEN_IDENTIFIER
+		&& currentToken(parser)->type != TOKEN_SEMICOL) { 
+		printf("Error: %s\n", currentToken(parser)->value);
 		reportError(parser, "Invalid expression provided");
 		skip(parser);
 		return NULL;
 	}
 
 	ASTNode *left = parseFactor(parser);
-	if (left == NULL) return NULL;
+	if (currentToken(parser)->type == TOKEN_SEMICOL) {
+		return left;
+	}
 
 	while (currentToken(parser)) {
 		Token *op = currentToken(parser);
@@ -251,6 +262,15 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		if (opPrec < minPrecedence || op->type == TOKEN_CPAREN|| op->type == TOKEN_SEMICOL)
 			break;
 
+		
+		if (op->type == OP_ASSN) {
+			ASTNode *binNode = parseBinary(parser);
+			ASTNode *right = parseExpression(parser, opPrec);
+			binNode->binary.left = left;
+			binNode->binary.right = right;
+			return binNode;
+		}
+		
 		// Parse right-hand side expression with higher precedence.
 		ASTNode *binNode = parseBinary(parser);
 		if (binNode == NULL) break;
@@ -276,15 +296,13 @@ ASTNode *parseFactor(Parser* parser) {
 		consume(parser, TOKEN_CPAREN, "Expected closing bracket at end of expression");
 		return node;
 	}
-
 	if (currentToken(parser)->type == OP_NEGATION
 		|| currentToken(parser)->type == OP_NEGATIONL
 		|| currentToken(parser)->type == OP_COMPL) {
 		node->factor.unary = parseUnary(parser);
 		node->factor.factor = parseFactor(parser);
 		return node;
-	}
-	
+	}	
 	if (currentToken(parser)->type == LITERAL_INT) {
 		node->factor.constant = parseConstant(parser);
 		return node;

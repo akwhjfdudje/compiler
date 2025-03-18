@@ -60,11 +60,11 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			// Emit global directive and function label.
 			appendFormat(&gen->sb, "    .globl %s\n", node->function.name);
 			appendFormat(&gen->sb, "%s:\n", node->function.name);
-			appendFormat(&gen->sb, "    push %%ebp\n");
-			appendFormat(&gen->sb, "    movl %%esp, %%ebp\n");
+			appendFormat(&gen->sb, "    push     %%ebp\n");
+			appendFormat(&gen->sb, "    movl     %%esp, %%ebp\n");
 			generateX86(gen, node->function.body);
-			appendFormat(&gen->sb, "    movl %%ebp, %%esp\n");
-			appendFormat(&gen->sb, "    pop %%ebp\n");
+			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop      %%ebp\n");
 			appendString(&gen->sb, "    ret\n");
 			break;
 		}
@@ -99,9 +99,9 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			if (node->decl.initializer != NULL) {
 				generateX86(gen, node->decl.initializer);
 			}
-			appendString(&gen->sb, "    pushl %eax\n");
-			insertHash(varmap, id, stackIndex);
+			appendString(&gen->sb, "    pushl    %eax\n");
 			stackIndex -= 4;	
+			insertHash(varmap, id, stackIndex);
 			break;
 		}
 		case AST_FACTOR: {
@@ -109,6 +109,7 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			if (node->factor.expression != NULL ) generateX86(gen, node->factor.expression);  // Generate code for a subexpression
 			if (node->factor.unary != NULL ) generateX86(gen, node->factor.unary);  // Generate code for a unary operator 
 			if (node->factor.constant != NULL ) generateX86(gen, node->factor.constant);  // Generate code for the constant
+			if (node->factor.identifier != NULL ) generateX86(gen, node->factor.identifier);
 			break;
 		}
 		case AST_BINARY: {
@@ -285,7 +286,7 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			break;
 		}
 		case AST_CONSTANT: {
-			appendFormat(&gen->sb, "    movl   $%s, %%eax\n", node->constant.value);
+			appendFormat(&gen->sb, "    movl     $%s, %%eax\n", node->constant.value);
 			break;
 		}
 		case AST_UNARY: {
@@ -308,8 +309,9 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				printf("Compile error: identifier does not exist.\n");
 			}
 			char offset[32];
-			snprintf(offset, 32, "    movl %d(%%ebp), %%eax", varOffset);
+			snprintf(offset, 32, "    movl      %d(%%ebp), %%eax\n", varOffset);
 			appendString(&gen->sb, offset);
+			break;
 		}
 		default:
 			appendString(&gen->sb, "    # Unknown AST Node\n");
