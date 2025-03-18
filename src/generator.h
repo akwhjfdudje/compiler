@@ -15,5 +15,5 @@ typedef struct {
 void initStringBuffer(StringBuffer *sb);
 void appendString(StringBuffer *sb, const char *str);
 void appendFormat(StringBuffer *sb, const char *format, ...);
-void generateX86(CodeGenerator *gen, ASTNode *node);
+int generateX86(CodeGenerator *gen, ASTNode *node);
 #endif

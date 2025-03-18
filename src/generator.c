@@ -11,6 +11,7 @@ int labelCount = 0;
 HashMap* varmap; 
 int stackIndex = 0;
 int m;
+int cFail;
 void initStringBuffer(StringBuffer *sb) {
 	sb->capacity = 256;
 	sb->length = 0;
@@ -43,9 +44,9 @@ void makeLabel(char *label, int id) {
 	snprintf(label, 256, "_LLLL%d", id);
 }
 
-void generateX86(CodeGenerator *gen, ASTNode *node) {
+int generateX86(CodeGenerator *gen, ASTNode *node) {
 	if (!node)
-		return;
+		return 1;
 
 	switch (node->type) {
 		case AST_PROGRAM: {
@@ -60,11 +61,11 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			// Emit global directive and function label.
 			appendFormat(&gen->sb, "    .globl %s\n", node->function.name);
 			appendFormat(&gen->sb, "%s:\n", node->function.name);
-			appendFormat(&gen->sb, "    push     %%ebp\n");
-			appendFormat(&gen->sb, "    movl     %%esp, %%ebp\n");
+			appendFormat(&gen->sb, "    push      %%ebp\n");
+			appendFormat(&gen->sb, "    movl      %%esp, %%ebp\n");
 			generateX86(gen, node->function.body);
-			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
-			appendFormat(&gen->sb, "    pop      %%ebp\n");
+			appendFormat(&gen->sb, "    movl      %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop       %%ebp\n");
 			appendString(&gen->sb, "    ret\n");
 			break;
 		}
@@ -94,7 +95,7 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			const char *id = node->decl.identifier->identifier.value;
 			if (getHash(varmap, id) != -1) {
 				printf("Compile error: identifier already declared at %s\n", id);
-				return;
+				cFail = 1;
 			}
 			if (node->decl.initializer != NULL) {
 				generateX86(gen, node->decl.initializer);
@@ -271,11 +272,11 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				struct ASTNode* l = node->binary.left;
 				if (l->type != AST_FACTOR) {
 					printf("Compile error: expected variable, found expression.\n");
-					return;
+					return 1;
 				}
 				if (l->factor.identifier == NULL) {
 					printf("Compile error: invalid assignment; expected variable.\n");
-					return;
+					return 1;
 				}
 				const char *id = l->factor.identifier->identifier.value;
 				int varOffset = getHash(varmap, id);
@@ -317,4 +318,5 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			appendString(&gen->sb, "    # Unknown AST Node\n");
 			break;
 	}
+	return cFail;
 }

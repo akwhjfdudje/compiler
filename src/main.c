@@ -67,7 +67,12 @@ int main(int argc, char** argv) {
 
 	CodeGenerator generator;
 	initStringBuffer(&generator.sb);
-	generateX86(&generator, ast);
+	int compileFail = generateX86(&generator, ast);
+
+	if (compileFail != 0) {
+		printf("Damn.\n");
+		return 1;
+	}
   
 	// Put into a file.
 	FILE *file = fopen("asm.s", "w");
