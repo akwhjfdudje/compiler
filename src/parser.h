@@ -7,6 +7,7 @@ typedef enum {
 	AST_BLOCK,
 	AST_STATEMENT,
 	AST_DECL,
+	AST_RETURN,
 	AST_EXPRESSION,
 	AST_CONSTANT,
 	AST_UNARY,
@@ -40,9 +41,15 @@ typedef struct ASTNode {
 		struct {
 			struct ASTNode *expression;
 			struct ASTNode *declaration;
+			struct ASTNode *retn;
 		} statement;
 
-		// AST_DECL: declaration 
+		// AST_RETURN: return statement 
+		struct {
+			struct ASTNode *expression;
+		} retn;
+
+		// AST_DECL: declaration statement
 		struct {
 			char *type;
 			struct ASTNode *identifier;
@@ -100,6 +107,7 @@ ASTNode *parseProgram(Parser* parser);
 ASTNode *parseFunction(Parser* parser);
 ASTNode *parseBlock(Parser* parser);
 ASTNode *parseStatement(Parser* parser);
+ASTNode *parseReturn(Parser* parser);
 ASTNode *parseDeclaration(Parser* parser);
 ASTNode *parseExpression(Parser* parser, int precedence);
 ASTNode *parseUnary(Parser* parser);

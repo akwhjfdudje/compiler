@@ -12,6 +12,7 @@ HashMap* varmap;
 int stackIndex = 0;
 int m;
 int cFail;
+int ret;
 void initStringBuffer(StringBuffer *sb) {
 	sb->capacity = 256;
 	sb->length = 0;
@@ -61,11 +62,15 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			// Emit global directive and function label.
 			appendFormat(&gen->sb, "    .globl %s\n", node->function.name);
 			appendFormat(&gen->sb, "%s:\n", node->function.name);
-			appendFormat(&gen->sb, "    push      %%ebp\n");
-			appendFormat(&gen->sb, "    movl      %%esp, %%ebp\n");
+			appendFormat(&gen->sb, "    push     %%ebp\n");
+			appendFormat(&gen->sb, "    movl     %%esp, %%ebp\n");
 			generateX86(gen, node->function.body);
-			appendFormat(&gen->sb, "    movl      %%ebp, %%esp\n");
-			appendFormat(&gen->sb, "    pop       %%ebp\n");
+			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop      %%ebp\n");
+			if (!(strcmp(node->function.name, "main")) && !(ret)) {
+				// Section 5.1.2.2.3, C11:
+				appendString(&gen->sb, "    movl     $0, %eax\n");
+			}
 			appendString(&gen->sb, "    ret\n");
 			break;
 		}
@@ -79,10 +84,13 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 		case AST_STATEMENT: {
 			appendString(&gen->sb, "    # statement\n");
 			if (node->statement.expression != NULL) {
-				generateX86(gen, node->statement.expression);  // Generate code for the return expression.
+				generateX86(gen, node->statement.expression);  // Generate code for an expression.
 			}
 			if (node->statement.declaration != NULL) {
-				generateX86(gen, node->statement.declaration);  // Generate code for the return expression.
+				generateX86(gen, node->statement.declaration);  // Generate code for a declaration.
+			}
+			if (node->statement.retn != NULL) {
+				generateX86(gen, node->statement.retn); // Generate code for the return expression. 
 			}
 			break;
 		}
@@ -94,6 +102,7 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			}
 			const char *id = node->decl.identifier->identifier.value;
 			if (getHash(varmap, id) != -1) {
+				// TODO: make better compiler errors...
 				printf("Compile error: identifier already declared at %s\n", id);
 				cFail = 1;
 			}
@@ -104,6 +113,12 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			stackIndex -= 4;	
 			insertHash(varmap, id, stackIndex);
 			break;
+		}
+		case AST_RETURN: {
+			// Set a return flag:
+			ret = 1;
+			generateX86(gen, node->retn.expression);
+			appendString(&gen->sb, "    movl      %eax, %eax\n");
 		}
 		case AST_FACTOR: {
 			if (node->factor.factor != NULL) generateX86(gen, node->factor.factor); // Generate code for the subfactor
@@ -272,10 +287,12 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 				struct ASTNode* l = node->binary.left;
 				if (l->type != AST_FACTOR) {
 					printf("Compile error: expected variable, found expression.\n");
+					cFail = 1;
 					return 1;
 				}
 				if (l->factor.identifier == NULL) {
 					printf("Compile error: invalid assignment; expected variable.\n");
+					cFail = 1;
 					return 1;
 				}
 				const char *id = l->factor.identifier->identifier.value;
@@ -308,6 +325,7 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			int varOffset = getHash(varmap, node->identifier.value);
 			if (varOffset == -1) {
 				printf("Compile error: identifier does not exist.\n");
+				cFail = 1;
 			}
 			char offset[32];
 			snprintf(offset, 32, "    movl      %d(%%ebp), %%eax\n", varOffset);

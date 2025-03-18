@@ -164,10 +164,10 @@ ASTNode *parseBlock(Parser* parser) {
 
 ASTNode *parseStatement(Parser* parser) {
 	if (currentToken(parser)->type == KEYW_RETURN) {
-		consume(parser, KEYW_RETURN, "Return statement start");
 		ASTNode *node = newASTNode(AST_STATEMENT);
-		node->statement.expression = parseExpression(parser, 0);
+		node->statement.retn = parseReturn(parser);
 		node->statement.declaration = NULL;
+		node->statement.expression = NULL;
 		if (parser->errorFlag) {
 			skip(parser);
 			return NULL;
@@ -182,24 +182,33 @@ ASTNode *parseStatement(Parser* parser) {
 	}
 	if (currentToken(parser)->type == KEYW_INT) {
 		ASTNode *node = newASTNode(AST_STATEMENT);
+		node->statement.retn = NULL;
 		node->statement.declaration = parseDeclaration(parser);
 		node->statement.expression = NULL;
 		return node;
 	}
 	ASTNode *node = newASTNode(AST_STATEMENT);
-	node->statement.expression = parseExpression(parser, 0);
+	node->statement.retn = NULL;
 	node->statement.declaration = NULL;
+	node->statement.expression = parseExpression(parser, 0);
 	if (node->statement.expression == NULL) {
 		reportError(parser, "Invalid expression");
 		skip(parser);
 		return NULL;
 	}
 	if (currentToken(parser)->type != TOKEN_SEMICOL) {
-		reportError(parser, "Expected ';' after expression");
+		reportError(parser, "Expected ';' at end of statement");
 		skip(parser);
 		return NULL;
 	}
 	consume(parser, TOKEN_SEMICOL, "After expression");
+	return node;
+}
+
+ASTNode *parseReturn(Parser* parser) {
+	consume(parser, KEYW_RETURN, "Return statement start");
+	ASTNode* node = newASTNode(AST_RETURN);
+	node->retn.expression = parseExpression(parser, 0);
 	return node;
 }
 
@@ -427,6 +436,7 @@ void printAST(ASTNode *node, int indent) {
 			printf("Statement:\n");
 			if (node->statement.expression != NULL ) printAST(node->statement.expression, indent + 1);
 			if (node->statement.declaration != NULL ) printAST(node->statement.declaration, indent + 1);
+			if (node->statement.retn != NULL ) printAST(node->statement.retn, indent + 1);
 			break;
 		case AST_EXPRESSION:
 			printf("Terms:\n");
@@ -452,6 +462,12 @@ void printAST(ASTNode *node, int indent) {
 				printf("|__");
 				printf("Initialized as:\n");
 				printAST(node->decl.initializer, indent + 2);
+			}
+			break;
+		case AST_RETURN:
+			printf("Returns:\n");
+			if (node->retn.expression != NULL) {
+				printAST(node->retn.expression, indent + 1);
 			}
 			break;
 		case AST_FACTOR:
