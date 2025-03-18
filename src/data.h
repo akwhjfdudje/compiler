@@ -6,7 +6,7 @@
 // Define the structure for each entry in the HashMap
 typedef struct {
     char* key;
-    void* value;
+    int value;
 } HashMapEntry;
 
 // Define the structure for the HashMap
@@ -26,8 +26,8 @@ typedef struct {
 // Hashmap: 
 HashMap* createHashmap(size_t capacity);
 void freeHashmap(HashMap* hashmap);
-void* getHash(HashMap* hashmap, const char* key);
-int insertHash(HashMap* hashmap, const char* key, void* value);
+int getHash(HashMap* hashmap, const char* key);
+int insertHash(HashMap* hashmap, const char* key, int value);
 int removeHash(HashMap* hashmap, const char* key);
 
 // Stack:

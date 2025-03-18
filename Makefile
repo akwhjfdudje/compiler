@@ -3,7 +3,7 @@ ifeq ($(DEBUG),1)
 	CFLAGS += -DDEBUG
 endif
 
-build: bin/ lexer.o parser.o main.o generator.o
+build: bin/ lexer.o parser.o main.o generator.o data.o
 	@gcc bin/*.o -o c3
 	
 debug: CFLAGS += -DDEBUG

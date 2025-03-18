@@ -5,8 +5,12 @@
 #include <string.h>
 #include "parser.h"
 #include "generator.h"
+#include "data.h"
 
 int labelCount = 0;
+HashMap* varmap; 
+int stackIndex = 0;
+int m;
 void initStringBuffer(StringBuffer *sb) {
 	sb->capacity = 256;
 	sb->length = 0;
@@ -51,10 +55,16 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 			break;
 		}
 		case AST_FUNCTION: {
+			// Set start of stack pointer:
+			stackIndex = 0;
 			// Emit global directive and function label.
 			appendFormat(&gen->sb, "    .globl %s\n", node->function.name);
 			appendFormat(&gen->sb, "%s:\n", node->function.name);
+			appendFormat(&gen->sb, "    push %%ebp\n");
+			appendFormat(&gen->sb, "    movl %%esp, %%ebp\n");
 			generateX86(gen, node->function.body);
+			appendFormat(&gen->sb, "    movl %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop %%ebp\n");
 			appendString(&gen->sb, "    ret\n");
 			break;
 		}
@@ -67,7 +77,32 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 		}
 		case AST_STATEMENT: {
 			appendString(&gen->sb, "    # statement\n");
-			generateX86(gen, node->statement.expression);  // Generate code for the return expression.
+			if (node->statement.expression != NULL) {
+				generateX86(gen, node->statement.expression);  // Generate code for the return expression.
+			}
+			if (node->statement.declaration != NULL) {
+				generateX86(gen, node->statement.declaration);  // Generate code for the return expression.
+			}
+			break;
+		}
+		case AST_DECL: {
+			// Check existence:
+			if (!m) {
+				printf("Atrocity committed this many times\n");
+				varmap = createHashmap(64);
+				m = 1;
+			}
+			const char *id = node->decl.identifier->identifier.value;
+			if (getHash(varmap, id) != -1) {
+				printf("Compile error: identifier already declared at %s\n", id);
+				return;
+			}
+			if (node->decl.initializer != NULL) {
+				generateX86(gen, node->decl.initializer);
+			}
+			appendString(&gen->sb, "    pushl %eax\n");
+			insertHash(varmap, id, stackIndex);
+			stackIndex -= 4;	
 			break;
 		}
 		case AST_FACTOR: {
@@ -231,6 +266,25 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, label2);
 				appendString(&gen->sb, ":\n");
 			}
+			if (!(strcmp(node->binary.value, "="))) {
+				generateX86(gen, node->binary.right);
+				struct ASTNode* l = node->binary.left;
+				if (l->type != AST_FACTOR) {
+					printf("Uh oh.\n");
+					return;
+				}
+				printf("Here.\n");
+				printf("Type of node: %s", l->factor.identifier->identifier.value);
+				if (l->factor.identifier == NULL) {
+					printf("Compile error: invalid assignment; expected variable.\n");
+					return;
+				}
+				const char *id = l->identifier.value;
+				int varOffset = getHash(varmap, id);
+				char offset[32];
+				snprintf(offset, 32, "    movl %%eax, %d(%%ebp)", varOffset);
+				appendString(&gen->sb, offset);
+			}
 			break;
 		}
 		case AST_CONSTANT: {
@@ -250,6 +304,16 @@ void generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, "    sete %al\n");
 			}
 			break;
+		}
+		case AST_IDENTIFIER: {
+			int varOffset = getHash(varmap, node->identifier.value);
+			if (varOffset == -1) {
+				printf("Compile error: identifier does not exist.\n");
+			}
+			char offset[32];
+			snprintf(offset, 32, "    movl %d(%%ebp), %%eax", varOffset);
+			appendString(&gen->sb, offset);
+
 		}
 		default:
 			appendString(&gen->sb, "    # Unknown AST Node\n");

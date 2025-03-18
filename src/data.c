@@ -35,22 +35,22 @@ void freeHashmap(HashMap* hashmap) {
 }
 
 // Get the value associated with a key in the HashMap
-void* getHash(HashMap* hashmap, const char* key) {
+int getHash(HashMap* hashmap, const char* key) {
 	size_t index = hash(key, hashmap->capacity);
 	for (size_t i = 0; i < hashmap->capacity; i++) {
 		size_t probe_index = (index + i) % hashmap->capacity;
 		if (hashmap->entries[probe_index].key == NULL) {
-			return NULL; // Key not found
+			return -1; // Key not found
 		}
 		if (strcmp(hashmap->entries[probe_index].key, key) == 0) {
 			return hashmap->entries[probe_index].value;
 		}
 	}
-	return NULL; // Key not found
+	return -1; // Key not found
 }
 
 // Insert or update a key-value pair in the HashMap
-int insertHash(HashMap* hashmap, const char* key, void* value) {
+int insertHash(HashMap* hashmap, const char* key, int value) {
 	if (hashmap->size >= hashmap->capacity) {
 		return -1; // HashMap is full
 	}
@@ -83,7 +83,7 @@ int removeHash(HashMap* hashmap, const char* key) {
 		if (strcmp(hashmap->entries[probe_index].key, key) == 0) {
 			free(hashmap->entries[probe_index].key);
 			hashmap->entries[probe_index].key = NULL;
-			hashmap->entries[probe_index].value = NULL;
+			hashmap->entries[probe_index].value = -1;
 			hashmap->size--;
 			return 0;
 		}

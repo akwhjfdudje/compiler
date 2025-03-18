@@ -269,6 +269,7 @@ ASTNode *parseFactor(Parser* parser) {
 	node->factor.unary = NULL;
 	node->factor.constant = NULL;
 	node->factor.identifier = NULL;
+	node->factor.factor = NULL;
 	if (currentToken(parser)->type == TOKEN_OPAREN) {
 		consume(parser, TOKEN_OPAREN, "At expression start");
 		node->factor.expression = parseExpression(parser, 0);
