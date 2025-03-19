@@ -33,6 +33,7 @@ typedef enum{
 typedef struct{
 	TokenType type;
 	char* value;
+	int line;
 } Token;
 
 typedef struct{

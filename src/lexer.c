@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "lexer.h"
 
+int lineCount = 1;
 const char* keywords[] = {
 	"return",
 	"int",
@@ -30,6 +31,7 @@ Token* createToken(TokenType type, char* value){
 	Token* t = malloc(sizeof(Token));
 	t->type = type;
 	t->value = value;
+	t->line = lineCount;
 	return t;
 }
 
@@ -42,6 +44,13 @@ void freeToken(Token* token){
 Token* lexerNextToken(Lexer* l) {
 	while(l->pos < strlen(l->input)){
 		char c = l->input[l->pos];
+
+		// Newline:
+		if (c == '\n') {
+			lineCount += 1;
+			l->pos++;
+			continue;
+		}
 
 		// Spaces, newlines, tabs:
 		if (isspace(c)) {
@@ -175,6 +184,7 @@ Token* lexerNextToken(Lexer* l) {
 			}
 			return createToken(TOKEN_IDENTIFIER, str);
 		}
+
 		l->pos++;
 		return createToken(TOKEN_INVALID, "Invalid");
 	}

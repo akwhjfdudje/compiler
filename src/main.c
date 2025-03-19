@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
 	
 	#ifdef DEBUG
 	for (int i = 0; i < token_count && tokens[i] != NULL; i++) {
-		printf("Token: Type=%d, Value='%s'\n", tokens[i]->type, tokens[i]->value);
+		printf("Token: Type=%d, Value='%s', Line=%d\n", tokens[i]->type, tokens[i]->value, tokens[i]->line);
 	}
 	#endif
 	

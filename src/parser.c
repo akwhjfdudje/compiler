@@ -5,9 +5,10 @@
 
 
 void reportError(Parser *parser, const char *message) {
-    fprintf(stderr, "Parse error: %s at token '%s'\n",
+    fprintf(stderr, "Parse error: %s at token '%s', on line %d\n",
 		message,
-		currentToken(parser)->value ? currentToken(parser)->value : "EOF");
+		currentToken(parser)->value ? currentToken(parser)->value : "EOF",
+		currentToken(parser)->line);
     parser->errorFlag = 1;
 }
 
