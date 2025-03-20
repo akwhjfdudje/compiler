@@ -67,8 +67,8 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			generateX86(gen, node->function.body);
 			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
 			appendFormat(&gen->sb, "    pop      %%ebp\n");
+			// Section 5.1.2.2.3, C11:
 			if (!(strcmp(node->function.name, "main")) && !(ret)) {
-				// Section 5.1.2.2.3, C11:
 				appendString(&gen->sb, "    movl     $0, %eax\n");
 			}
 			appendString(&gen->sb, "    ret\n");
@@ -118,14 +118,15 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			// Set a return flag:
 			ret = 1;
 			generateX86(gen, node->retn.expression);
-			appendString(&gen->sb, "    movl      %eax, %eax\n");
+			appendString(&gen->sb, "    movl     %eax, %eax\n");
+			break;
 		}
 		case AST_FACTOR: {
 			if (node->factor.factor != NULL) generateX86(gen, node->factor.factor); // Generate code for the subfactor
-			if (node->factor.expression != NULL ) generateX86(gen, node->factor.expression);  // Generate code for a subexpression
-			if (node->factor.unary != NULL ) generateX86(gen, node->factor.unary);  // Generate code for a unary operator 
-			if (node->factor.constant != NULL ) generateX86(gen, node->factor.constant);  // Generate code for the constant
-			if (node->factor.identifier != NULL ) generateX86(gen, node->factor.identifier);
+			if (node->factor.expression != NULL) generateX86(gen, node->factor.expression);  // Generate code for a subexpression
+			if (node->factor.unary != NULL) generateX86(gen, node->factor.unary);  // Generate code for a unary operator 
+			if (node->factor.constant != NULL) generateX86(gen, node->factor.constant);  // Generate code for the constant
+			if (node->factor.identifier != NULL) generateX86(gen, node->factor.identifier);
 			break;
 		}
 		case AST_BINARY: {
@@ -295,6 +296,11 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 					cFail = 1;
 					return 1;
 				}
+				if (!m) {
+					printf("Error: no identifiers exist yet.\n");
+					cFail = 1;
+					break;
+				}
 				const char *id = l->factor.identifier->identifier.value;
 				int varOffset = getHash(varmap, id);
 				char offset[32];
@@ -322,6 +328,11 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			break;
 		}
 		case AST_IDENTIFIER: {
+			if (!m) {
+				printf("Error: no identifiers exist yet.\n");
+				cFail = 1;
+				break;
+			}
 			int varOffset = getHash(varmap, node->identifier.value);
 			if (varOffset == -1) {
 				printf("Compile error: identifier does not exist.\n");

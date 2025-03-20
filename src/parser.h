@@ -70,6 +70,7 @@ typedef struct ASTNode {
 			struct ASTNode *constant;
 			struct ASTNode *identifier;
 		} factor;
+
 		// AST_CONSTANT: numeric constant (as string)
 		struct {
 			char *value;

@@ -252,7 +252,6 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		&& currentToken(parser)->type != TOKEN_OPAREN
 		&& currentToken(parser)->type != TOKEN_IDENTIFIER
 		&& currentToken(parser)->type != TOKEN_SEMICOL) { 
-		printf("Error: %s\n", currentToken(parser)->value);
 		reportError(parser, "Invalid expression provided");
 		skip(parser);
 		return NULL;
@@ -406,7 +405,7 @@ ASTNode *parseIdentifier(Parser *parser) {
 		return NULL;
 	}
 	ASTNode *node = newASTNode(AST_IDENTIFIER);
-	node->constant.value = strdup(currentToken(parser)->value);
+	node->identifier.value = strdup(currentToken(parser)->value);
 	consume(parser, TOKEN_IDENTIFIER, "After identifier");
 	return node;
 
