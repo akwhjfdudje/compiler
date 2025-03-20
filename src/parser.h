@@ -79,6 +79,7 @@ typedef struct ASTNode {
 		// AST_UNARY: unary symbol (as string)
 		struct {
 			char *value;
+			int isPostfix;
 		} unary;
 
 		// AST_IDENTIFIER: identifier 

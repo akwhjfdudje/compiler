@@ -251,7 +251,9 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		&& currentToken(parser)->type != LITERAL_INT
 		&& currentToken(parser)->type != TOKEN_OPAREN
 		&& currentToken(parser)->type != TOKEN_IDENTIFIER
-		&& currentToken(parser)->type != TOKEN_SEMICOL) { 
+		&& currentToken(parser)->type != TOKEN_SEMICOL
+		&& currentToken(parser)->type != OP_INC
+		&& currentToken(parser)->type != OP_DEC) { 
 		reportError(parser, "Invalid expression provided");
 		skip(parser);
 		return NULL;
@@ -305,6 +307,12 @@ ASTNode *parseFactor(Parser* parser) {
 		consume(parser, TOKEN_CPAREN, "Expected closing bracket at end of expression");
 		return node;
 	}
+	if (currentToken(parser)->type == OP_INC
+		|| currentToken(parser)->type == OP_DEC) {
+		node->factor.unary = parseUnary(parser);
+		node->factor.identifier = parseIdentifier(parser);
+		return node;
+	}
 	if (currentToken(parser)->type == OP_NEGATION
 		|| currentToken(parser)->type == OP_NEGATIONL
 		|| currentToken(parser)->type == OP_COMPL) {
@@ -318,6 +326,11 @@ ASTNode *parseFactor(Parser* parser) {
 	}
 	if (currentToken(parser)->type == TOKEN_IDENTIFIER) {
 		node->factor.identifier = parseIdentifier(parser);
+		if (currentToken(parser)->type == OP_INC 
+			|| currentToken(parser)->type == OP_DEC) {
+			node->factor.unary = parseUnary(parser);
+			node->factor.unary->unary.isPostfix = 1;
+		}
 		return node;
 	}
 	reportError(parser, "Invalid factor");
@@ -327,28 +340,40 @@ ASTNode *parseFactor(Parser* parser) {
 ASTNode *parseUnary(Parser* parser) {
 	if (currentToken(parser)->type != OP_COMPL 
 		&& currentToken(parser)->type != OP_NEGATION
-		&& currentToken(parser)->type != OP_NEGATIONL) {
+		&& currentToken(parser)->type != OP_NEGATIONL
+		&& currentToken(parser)->type != OP_INC
+		&& currentToken(parser)->type != OP_DEC) {
 		reportError(parser, "Expected operator in expression");
 		skip(parser);
 		return NULL;
 	}
 	ASTNode *node = newASTNode(AST_UNARY);
-	if (currentToken(parser)->type == OP_COMPL) {
-		node->unary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_COMPL, "Before expression");
-		return node;
-	}
-	if (currentToken(parser)->type == OP_NEGATION) {
-		node->unary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_NEGATION, "Before expression");
-		return node;
-	}
-	if (currentToken(parser)->type == OP_NEGATIONL) {
-		node->unary.value = strdup(currentToken(parser)->value);
-		consume(parser, OP_NEGATIONL, "Before expression");
-		return node;
-	}
+	node->unary.value = strdup(currentToken(parser)->value);
+	consume(parser, currentToken(parser)->type, "Before expression");
 	return node;
+	/*
+		if (currentToken(parser)->type == OP_COMPL) {
+			node->unary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_COMPL, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_NEGATION) {
+			node->unary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_NEGATION, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_NEGATIONL) {
+			node->unary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_NEGATIONL, "Before expression");
+			return node;
+		}
+		if (currentToken(parser)->type == OP_INC) {
+			node->unary.value = strdup(currentToken(parser)->value);
+			consume(parser, OP_INC, "Before expression");
+			return node;
+		}
+		return node;
+	*/
 }
 
 ASTNode *parseBinary(Parser* parser) {
@@ -483,6 +508,9 @@ void printAST(ASTNode *node, int indent) {
 			break;
 		case AST_UNARY:
 			printf("Operator: %s\n", node->unary.value);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("Postfix?: %s\n", node->unary.isPostfix ? "true" : "false");
 			break;
 		case AST_BINARY:
 			printf("Left:\n");

@@ -97,6 +97,14 @@ Token* lexerNextToken(Lexer* l) {
 		// Negation, Bitwise comp.:
 		if (c == '-') {
 			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
+				l->pos++;
+				return createToken(OP_DECEQ, "-=");
+			}
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '-') {
+				l->pos++;
+				return createToken(OP_DEC, "--");
+			}
 			return createToken(OP_NEGATION, "-");
 		}
 		if (c == '~') {
@@ -115,6 +123,14 @@ Token* lexerNextToken(Lexer* l) {
 		// Operators:
 		if (c == '+') {
 			l->pos++;
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '=') {
+				l->pos++;
+				return createToken(OP_INCEQ, "+=");
+			}
+			if (l->pos < strlen(l->input) && l->input[l->pos] == '+') {
+				l->pos++;
+				return createToken(OP_INC, "++");
+			}
 			return createToken(OP_ADD, "+");
 		}
 		if (c == '*') {
