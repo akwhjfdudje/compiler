@@ -169,6 +169,7 @@ ASTNode *parseStatement(Parser* parser) {
 		node->statement.retn = parseReturn(parser);
 		node->statement.declaration = NULL;
 		node->statement.expression = NULL;
+		node->statement.ifstatement = NULL;
 		if (parser->errorFlag) {
 			skip(parser);
 			return NULL;
@@ -186,6 +187,15 @@ ASTNode *parseStatement(Parser* parser) {
 		node->statement.retn = NULL;
 		node->statement.declaration = parseDeclaration(parser);
 		node->statement.expression = NULL;
+		node->statement.ifstatement = NULL;
+		return node;
+	}
+	if (currentToken(parser)->type == KEYW_IF) {
+		ASTNode *node = newASTNode(AST_STATEMENT);
+		node->statement.retn = NULL;
+		node->statement.declaration = NULL;
+		node->statement.expression = NULL;
+		node->statement.ifstatement = parseIf(parser);
 		return node;
 	}
 	ASTNode *node = newASTNode(AST_STATEMENT);
@@ -203,6 +213,22 @@ ASTNode *parseStatement(Parser* parser) {
 		return NULL;
 	}
 	consume(parser, TOKEN_SEMICOL, "After expression");
+	return node;
+}
+
+ASTNode *parseIf(Parser* parser) {
+	if (currentToken(parser)->type != KEYW_IF) {
+		reportError(parser, "Expected if");
+		skip(parser);
+		return NULL;
+	}
+
+	consume(parser, KEYW_IF, "Start of conditional");
+	consume(parser, TOKEN_OPAREN, "Expected parenthesis");
+	ASTNode* node = newASTNode(AST_IF);
+	node->ifstmt.condition = parseExpression(parser, 0);
+	consume(parser, TOKEN_CPAREN, "Expected end of expression.");
+	node->ifstmt.body = parseBlock(parser);
 	return node;
 }
 
@@ -349,6 +375,7 @@ ASTNode *parseUnary(Parser* parser) {
 	}
 	ASTNode *node = newASTNode(AST_UNARY);
 	node->unary.value = strdup(currentToken(parser)->value);
+	node->unary.isPostfix = 0;
 	consume(parser, currentToken(parser)->type, "Before expression");
 	return node;
 	/*
@@ -432,6 +459,9 @@ ASTNode *parseIdentifier(Parser *parser) {
 	ASTNode *node = newASTNode(AST_IDENTIFIER);
 	node->identifier.value = strdup(currentToken(parser)->value);
 	consume(parser, TOKEN_IDENTIFIER, "After identifier");
+	if (currentToken(parser)->type == OP_INC) {
+
+	}
 	return node;
 
 }
@@ -462,6 +492,7 @@ void printAST(ASTNode *node, int indent) {
 			if (node->statement.expression != NULL ) printAST(node->statement.expression, indent + 1);
 			if (node->statement.declaration != NULL ) printAST(node->statement.declaration, indent + 1);
 			if (node->statement.retn != NULL ) printAST(node->statement.retn, indent + 1);
+			if (node->statement.ifstatement != NULL ) printAST(node->statement.ifstatement, indent + 1);
 			break;
 		case AST_EXPRESSION:
 			printf("Terms:\n");
@@ -494,6 +525,14 @@ void printAST(ASTNode *node, int indent) {
 			if (node->retn.expression != NULL) {
 				printAST(node->retn.expression, indent + 1);
 			}
+			break;
+		case AST_IF:
+			printf("Condition:\n");
+			printAST(node->ifstmt.condition, indent + 1);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("Body:\n");
+			printAST(node->ifstmt.body, indent + 1);
 			break;
 		case AST_FACTOR:
 			printf("Factor:\n");

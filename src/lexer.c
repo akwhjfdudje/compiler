@@ -8,6 +8,7 @@ int lineCount = 1;
 const char* keywords[] = {
 	"return",
 	"int",
+	"if",
 	NULL
 };
 
@@ -182,6 +183,16 @@ Token* lexerNextToken(Lexer* l) {
 			return createToken(OP_GREATER, ">");
 		}
 
+		// Conditional operator:
+		if (c == '?') {
+			l->pos++;
+			return createToken(OP_Q, "?");
+		}
+		if (c == ':') {
+			l->pos++;
+			return createToken(OP_COLON, ":");
+		}
+
 		// Identifier/Keyword:
 		if (isalnum(c)) {
 			size_t s = l->pos;
@@ -196,6 +207,10 @@ Token* lexerNextToken(Lexer* l) {
 				}
 				if (strcmp(str, "return") == 0) {
 					return createToken(KEYW_RETURN, str);
+				}
+				if (strcmp(str, "if") == 0) {
+					printf("if: %s\n", str);
+					return createToken(KEYW_IF, str);
 				}
 			}
 			return createToken(TOKEN_IDENTIFIER, str);

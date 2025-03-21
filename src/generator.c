@@ -325,25 +325,32 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, "    movl $0, %eax\n");
 				appendString(&gen->sb, "    sete %al\n");
 			}
-			if (strcmp(node->unary.value, "++") == 0) {
-				if (node->unary.isPostfix) {
-					// TODO: this doesn't seem right?
-					//       refactor unary parsing to contain
-					//       the thing as well as the operator.
-					generateX86(gen, node->factor.identifier);
-					appendString(&gen->sb, "      inc      %%eax\n");
-					if (!m) {
-						printf("Error: no identifiers exist yet.\n");
-						cFail = 1;
-						break;
-					}
-					const char *id = node->factor.identifier->identifier.value;
-					int varOffset = getHash(varmap, id);
-					char offset[32];
-					snprintf(offset, 32, "    movl     %%eax, %d(%%ebp)\n", varOffset);
-					appendString(&gen->sb, offset);
-				}
-			}
+			// WIP: current compiler structure doesn't support
+			//      postfix/prefix/assign-operate
+			/*
+				if (strcmp(node->unary.value, "++") == 0) {
+					appendString(&gen->sb, "    inc      %eax\n");
+
+					
+						if (node->unary.isPostfix) {
+							// TODO: this doesn't seem right?
+							//       refactor unary parsing to contain
+							//       the thing as well as the operator.
+							generateX86(gen, node->factor.identifier);
+							appendString(&gen->sb, "      inc      %%eax\n");
+							if (!m) {
+								printf("Error: no identifiers exist yet.\n");
+								cFail = 1;
+								break;
+							}
+							const char *id = node->factor.identifier->identifier.value;
+							int varOffset = getHash(varmap, id);
+							char offset[32];
+							snprintf(offset, 32, "    movl      %%eax, %d(%%ebp)\n", varOffset);
+							appendString(&gen->sb, offset);
+						}
+			*/
+			
 			break;
 		}
 		case AST_IDENTIFIER: {

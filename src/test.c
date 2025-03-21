@@ -1,4 +1,7 @@
 int main() {
-	int c = 0;
-	return c++;
+	int a = 0;
+	if (a == 0) {
+		return 1;
+	}
+	return 0;
 }

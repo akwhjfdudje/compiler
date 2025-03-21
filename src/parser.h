@@ -7,6 +7,7 @@ typedef enum {
 	AST_BLOCK,
 	AST_STATEMENT,
 	AST_DECL,
+	AST_IF,
 	AST_RETURN,
 	AST_EXPRESSION,
 	AST_CONSTANT,
@@ -41,6 +42,7 @@ typedef struct ASTNode {
 		struct {
 			struct ASTNode *expression;
 			struct ASTNode *declaration;
+			struct ASTNode *ifstatement;
 			struct ASTNode *retn;
 		} statement;
 
@@ -48,6 +50,12 @@ typedef struct ASTNode {
 		struct {
 			struct ASTNode *expression;
 		} retn;
+
+		// AST_IF: if statement
+		struct {
+			struct ASTNode *condition; 
+			struct ASTNode *body;
+		} ifstmt;
 
 		// AST_DECL: declaration statement
 		struct {
@@ -109,6 +117,7 @@ ASTNode *parseProgram(Parser* parser);
 ASTNode *parseFunction(Parser* parser);
 ASTNode *parseBlock(Parser* parser);
 ASTNode *parseStatement(Parser* parser);
+ASTNode *parseIf(Parser* parser);
 ASTNode *parseReturn(Parser* parser);
 ASTNode *parseDeclaration(Parser* parser);
 ASTNode *parseExpression(Parser* parser, int precedence);
