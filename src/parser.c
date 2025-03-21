@@ -25,9 +25,9 @@ int precedence(TokenType type) {
 		case OP_EQ:
 		case OP_NOTEQ:      return 5;
 		case OP_AND:        return 4;
-		case OP_ASSN:       return 3;
+		case OP_OR:         return 3;
 		case OP_Q:          return 2;
-		case OP_OR:         return 1;
+		case OP_ASSN:       return 1;
 		default:            return 0;
 	}
 }
@@ -301,22 +301,6 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		if (opPrec < minPrecedence || op->type == TOKEN_CPAREN|| op->type == TOKEN_SEMICOL)
 			break;
 
-		if (op->type == OP_Q) {
-			ASTNode *ternNode = newASTNode(AST_TERNARY);
-			consume(parser, OP_Q, "Start of expression");
-			ASTNode *trueC = parseExpression(parser, opPrec - 1);
-			if (!currentToken(parser) || currentToken(parser)->type != OP_COLON) {
-				reportError(parser, "Expected ':' in conditional expression");
-				skip(parser);
-				return NULL;
-			}
-			consume(parser, OP_COLON, "Middle of expression");
-			ASTNode *falseC = parseExpression(parser, 0);
-			ternNode->ternary.condition = left;
-			ternNode->ternary.trueCond = trueC;
-			ternNode->ternary.falseCond = falseC;
-			return ternNode;
-		}	
 		if (op->type == OP_ASSN) {
 			ASTNode *binNode = parseBinary(parser);
 			ASTNode *right = parseExpression(parser, opPrec);
@@ -324,6 +308,22 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 			binNode->binary.right = right;
 			return binNode;
 		}
+		if (op->type == OP_Q) {
+			consume(parser, OP_Q, "Start of expression");
+			ASTNode *trueC = parseExpression(parser, 0);
+			if (!currentToken(parser) || currentToken(parser)->type != OP_COLON) {
+				reportError(parser, "Expected ':' in conditional expression");
+				skip(parser);
+				return NULL;
+			}
+			consume(parser, OP_COLON, "Middle of expression");
+			ASTNode *ternNode = newASTNode(AST_TERNARY);
+			ASTNode *falseC = parseExpression(parser, opPrec);
+			ternNode->ternary.condition = left;
+			ternNode->ternary.trueCond = trueC;
+			ternNode->ternary.falseCond = falseC;
+			return ternNode;
+		}	
 		
 		// Parse right-hand side expression with higher precedence.
 		ASTNode *binNode = parseBinary(parser);
