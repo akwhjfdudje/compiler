@@ -9,6 +9,7 @@ const char* keywords[] = {
 	"return",
 	"int",
 	"if",
+	"else",
 	NULL
 };
 
@@ -210,6 +211,10 @@ Token* lexerNextToken(Lexer* l) {
 				}
 				if (strcmp(str, "if") == 0) {
 					return createToken(KEYW_IF, str);
+				}
+				if (strcmp(str, "else") == 0) {
+					printf("here\n");
+					return createToken(KEYW_ELSE, str);
 				}
 			}
 			return createToken(TOKEN_IDENTIFIER, str);

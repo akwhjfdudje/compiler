@@ -56,6 +56,7 @@ typedef struct ASTNode {
 		struct {
 			struct ASTNode *condition; 
 			struct ASTNode *body;
+			struct ASTNode *elsestmt;
 		} ifstmt;
 
 		// AST_TERNARY: ternary conditional

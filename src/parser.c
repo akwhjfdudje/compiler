@@ -191,7 +191,8 @@ ASTNode *parseStatement(Parser* parser) {
 		node->statement.ifstatement = NULL;
 		return node;
 	}
-	if (currentToken(parser)->type == KEYW_IF) {
+	if (currentToken(parser)->type == KEYW_IF
+		|| currentToken(parser)->type == KEYW_ELSE) {
 		ASTNode *node = newASTNode(AST_STATEMENT);
 		node->statement.retn = NULL;
 		node->statement.declaration = NULL;
@@ -231,6 +232,10 @@ ASTNode *parseIf(Parser* parser) {
 	consume(parser, TOKEN_CPAREN, "Expected end of expression.");
 	node->ifstmt.body = currentToken(parser)->type == TOKEN_OBRACE ? 
 							parseBlock(parser) : parseStatement(parser);
+	if (currentToken(parser)->type == KEYW_ELSE) {
+		consume(parser, KEYW_ELSE, "Start of else statement");
+		node->ifstmt.elsestmt = parseStatement(parser);
+	}
 	return node;
 }
 
@@ -553,6 +558,12 @@ void printAST(ASTNode *node, int indent) {
 			printf("|__");
 			printf("Body:\n");
 			printAST(node->ifstmt.body, indent + 1);
+			if (node->ifstmt.elsestmt != NULL) {
+				for (int i = 0; i < indent; i++) printf("  ");
+				printf("|__");
+				printf("Else:\n");
+				printAST(node->ifstmt.elsestmt, indent + 1);
+			}
 			break;
 		case AST_TERNARY:
 			printf("Condition:\n");
