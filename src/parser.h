@@ -8,6 +8,7 @@ typedef enum {
 	AST_STATEMENT,
 	AST_DECL,
 	AST_IF,
+	AST_TERNARY,
 	AST_RETURN,
 	AST_EXPRESSION,
 	AST_CONSTANT,
@@ -56,6 +57,13 @@ typedef struct ASTNode {
 			struct ASTNode *condition; 
 			struct ASTNode *body;
 		} ifstmt;
+
+		// AST_TERNARY: ternary conditional
+		struct {
+			struct ASTNode *condition; 
+			struct ASTNode *trueCond;
+			struct ASTNode *falseCond;
+		} ternary;
 
 		// AST_DECL: declaration statement
 		struct {

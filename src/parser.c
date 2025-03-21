@@ -15,18 +15,19 @@ void reportError(Parser *parser, const char *message) {
 int precedence(TokenType type) {
 	switch (type) {
 		case OP_MUL:
-		case OP_DIV:        return 7;
+		case OP_DIV:        return 8;
 		case OP_ADD:
-		case OP_NEGATION:   return 6;
+		case OP_NEGATION:   return 7;
 		case OP_LESS:
 		case OP_LESSEQ:
 		case OP_GREATER:
-		case OP_GREATEREQ:  return 5;
+		case OP_GREATEREQ:  return 6;
 		case OP_EQ:
-		case OP_NOTEQ:      return 4;
-		case OP_AND:        return 3;
-		case OP_OR:         return 2;
-		case OP_ASSN:       return 1;
+		case OP_NOTEQ:      return 5;
+		case OP_AND:        return 4;
+		case OP_ASSN:       return 3;
+		case OP_Q:          return 2;
+		case OP_OR:         return 1;
 		default:            return 0;
 	}
 }
@@ -228,7 +229,8 @@ ASTNode *parseIf(Parser* parser) {
 	ASTNode* node = newASTNode(AST_IF);
 	node->ifstmt.condition = parseExpression(parser, 0);
 	consume(parser, TOKEN_CPAREN, "Expected end of expression.");
-	node->ifstmt.body = parseBlock(parser);
+	node->ifstmt.body = currentToken(parser)->type == TOKEN_OBRACE ? 
+							parseBlock(parser) : parseStatement(parser);
 	return node;
 }
 
@@ -299,7 +301,22 @@ ASTNode *parseExpression(Parser* parser, int minPrecedence) {
 		if (opPrec < minPrecedence || op->type == TOKEN_CPAREN|| op->type == TOKEN_SEMICOL)
 			break;
 
-		
+		if (op->type == OP_Q) {
+			ASTNode *ternNode = newASTNode(AST_TERNARY);
+			consume(parser, OP_Q, "Start of expression");
+			ASTNode *trueC = parseExpression(parser, opPrec - 1);
+			if (!currentToken(parser) || currentToken(parser)->type != OP_COLON) {
+				reportError(parser, "Expected ':' in conditional expression");
+				skip(parser);
+				return NULL;
+			}
+			consume(parser, OP_COLON, "Middle of expression");
+			ASTNode *falseC = parseExpression(parser, 0);
+			ternNode->ternary.condition = left;
+			ternNode->ternary.trueCond = trueC;
+			ternNode->ternary.falseCond = falseC;
+			return ternNode;
+		}	
 		if (op->type == OP_ASSN) {
 			ASTNode *binNode = parseBinary(parser);
 			ASTNode *right = parseExpression(parser, opPrec);
@@ -407,6 +424,9 @@ ASTNode *parseBinary(Parser* parser) {
 	if (currentToken(parser)->type < OP_NEGATION || currentToken(parser)->type >= TOKEN_EOF) {
 		reportError(parser, "Expected operator in expression");
 		skip(parser);
+		return NULL;
+	}
+	if (currentToken(parser)->type == OP_COLON || currentToken(parser)->type == OP_Q) {
 		return NULL;
 	}
 	ASTNode *node = newASTNode(AST_BINARY);
@@ -533,6 +553,18 @@ void printAST(ASTNode *node, int indent) {
 			printf("|__");
 			printf("Body:\n");
 			printAST(node->ifstmt.body, indent + 1);
+			break;
+		case AST_TERNARY:
+			printf("Condition:\n");
+			printAST(node->ternary.condition, indent + 1);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("True condition:\n");
+			printAST(node->ternary.trueCond, indent + 1);
+			for (int i = 0; i < indent; i++) printf("  ");
+			printf("|__");
+			printf("False condition:\n");
+			printAST(node->ternary.falseCond, indent + 1);
 			break;
 		case AST_FACTOR:
 			printf("Factor:\n");
