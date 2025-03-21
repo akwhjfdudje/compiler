@@ -42,6 +42,7 @@ void appendFormat(StringBuffer *sb, const char *format, ...) {
 }
 
 void makeLabel(char *label, int id) {
+	labelCount++;
 	snprintf(label, 256, "_LLLL%d", id);
 }
 
@@ -92,6 +93,9 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			if (node->statement.retn != NULL) {
 				generateX86(gen, node->statement.retn); // Generate code for the return expression. 
 			}
+			if (node->statement.ifstatement != NULL) {
+				generateX86(gen, node->statement.ifstatement); // Generate code for the if statement. 
+			}
 			break;
 		}
 		case AST_DECL: {
@@ -119,6 +123,29 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			ret = 1;
 			generateX86(gen, node->retn.expression);
 			appendString(&gen->sb, "    movl     %eax, %eax\n");
+			break;
+		}
+		case AST_IF: {
+			// TODO: C doesn't allow declarations in if statements.
+			//       Need to refactor code (shouldn't be too bad).
+			generateX86(gen, node->ifstmt.condition);
+			char label[256];
+			makeLabel(label, labelCount);
+			appendString(&gen->sb, "    cmpl     $0, %eax\n");
+			appendString(&gen->sb, "    je     ");
+			appendString(&gen->sb, label);
+			appendString(&gen->sb, "\n");
+			generateX86(gen, node->ifstmt.body);
+			char label2[256];
+			makeLabel(label2, labelCount);
+			appendString(&gen->sb, "    jmp   ");
+			appendString(&gen->sb, label2);
+			appendString(&gen->sb, "\n");
+			appendString(&gen->sb, label);
+			appendString(&gen->sb, ":\n");
+			generateX86(gen, node->ifstmt.elsestmt);
+			appendString(&gen->sb, label2);
+			appendString(&gen->sb, ":\n");		
 			break;
 		}
 		case AST_FACTOR: {
@@ -235,7 +262,6 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, "    setne     %al\n");
 			}
 			if (!(strcmp(node->binary.value, "&&"))) {
-				labelCount++;
 				char label[256];
 				makeLabel(label, labelCount);
 				generateX86(gen, node->binary.left);
@@ -243,7 +269,6 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, "    jne     ");
 				appendString(&gen->sb, label);
 				appendString(&gen->sb, "\n");
-				labelCount++;
 				char label2[256];
 				makeLabel(label2, labelCount);
 				appendString(&gen->sb, "    jmp   ");
@@ -309,6 +334,27 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			}
 			break;
 		}
+		case AST_TERNARY: {
+			generateX86(gen, node->ternary.condition);
+			char label[256];
+			makeLabel(label, labelCount);
+			appendString(&gen->sb, "    cmpl     $0, %eax\n");
+			appendString(&gen->sb, "    je     ");
+			appendString(&gen->sb, label);
+			appendString(&gen->sb, "\n");
+			generateX86(gen, node->ternary.trueCond);
+			char label2[256];
+			makeLabel(label2, labelCount);
+			appendString(&gen->sb, "    jmp   ");
+			appendString(&gen->sb, label2);
+			appendString(&gen->sb, "\n");
+			appendString(&gen->sb, label);
+			appendString(&gen->sb, ":\n");
+			generateX86(gen, node->ternary.falseCond);
+			appendString(&gen->sb, label2);
+			appendString(&gen->sb, ":\n");
+			break;
+		}
 		case AST_CONSTANT: {
 			appendFormat(&gen->sb, "    movl     $%s, %%eax\n", node->constant.value);
 			break;
@@ -324,33 +370,7 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 				appendString(&gen->sb, "    cmpl $0, %eax\n");
 				appendString(&gen->sb, "    movl $0, %eax\n");
 				appendString(&gen->sb, "    sete %al\n");
-			}
-			// WIP: current compiler structure doesn't support
-			//      postfix/prefix/assign-operate
-			/*
-				if (strcmp(node->unary.value, "++") == 0) {
-					appendString(&gen->sb, "    inc      %eax\n");
-
-					
-						if (node->unary.isPostfix) {
-							// TODO: this doesn't seem right?
-							//       refactor unary parsing to contain
-							//       the thing as well as the operator.
-							generateX86(gen, node->factor.identifier);
-							appendString(&gen->sb, "      inc      %%eax\n");
-							if (!m) {
-								printf("Error: no identifiers exist yet.\n");
-								cFail = 1;
-								break;
-							}
-							const char *id = node->factor.identifier->identifier.value;
-							int varOffset = getHash(varmap, id);
-							char offset[32];
-							snprintf(offset, 32, "    movl      %%eax, %d(%%ebp)\n", varOffset);
-							appendString(&gen->sb, offset);
-						}
-			*/
-			
+			}	
 			break;
 		}
 		case AST_IDENTIFIER: {

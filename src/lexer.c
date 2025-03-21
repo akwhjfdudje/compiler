@@ -213,7 +213,6 @@ Token* lexerNextToken(Lexer* l) {
 					return createToken(KEYW_IF, str);
 				}
 				if (strcmp(str, "else") == 0) {
-					printf("here\n");
 					return createToken(KEYW_ELSE, str);
 				}
 			}

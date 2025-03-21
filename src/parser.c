@@ -443,29 +443,6 @@ ASTNode *parseBinary(Parser* parser) {
 	node->binary.value = strdup(currentToken(parser)->value);
 	consume(parser, currentToken(parser)->type, "Before expression");
 	return node;
-	/*
-		if (currentToken(parser)->type == OP_ADD) {
-			node->binary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_ADD, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_MUL) {
-			node->binary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_MUL, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_NEGATION) {
-			node->binary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_NEGATION, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_DIV) {
-			node->binary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_DIV, "Before expression");
-			return node;
-		}
-		return node;
-	*/
 }
 
 ASTNode *parseConstant(Parser* parser) {
