@@ -133,7 +133,7 @@ ASTNode *parseFunction(Parser* parser) {
 }
 
 ASTNode *parseBlock(Parser* parser) {
-	// TODO : implement: https://stackoverflow.com/questions/22419790/c-error-expected-expression-before-int#22420796
+	// TODO: implement: https://stackoverflow.com/questions/22419790/c-error-expected-expression-before-int#22420796
 	if (currentToken(parser)->type != TOKEN_OBRACE) {
 		reportError(parser, "Expected '{' to start block");
 		skip(parser);
