@@ -135,6 +135,11 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			appendString(&gen->sb, "    je     ");
 			appendString(&gen->sb, label);
 			appendString(&gen->sb, "\n");
+			if (node->ifstmt.body->type == AST_STATEMENT && node->ifstmt.body->statement.declaration != NULL) {
+				printf("They decided this eons ago.\n");
+				cFail = 1;
+				return 1;
+			}
 			generateX86(gen, node->ifstmt.body);
 			char label2[256];
 			makeLabel(label2, labelCount);
