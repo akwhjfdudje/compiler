@@ -1,5 +1,6 @@
 int main() {
-	int a = 0;
-	int b = 0;
-	if (a) int c;
+	int a = -42;
+	if (a > 0) return a;
+	if (a < 0) return -a;
+	return 0;
 }

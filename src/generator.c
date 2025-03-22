@@ -66,8 +66,6 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			appendFormat(&gen->sb, "    push     %%ebp\n");
 			appendFormat(&gen->sb, "    movl     %%esp, %%ebp\n");
 			generateX86(gen, node->function.body);
-			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
-			appendFormat(&gen->sb, "    pop      %%ebp\n");
 			// Section 5.1.2.2.3, C11:
 			if (!(strcmp(node->function.name, "main")) && !(ret)) {
 				appendString(&gen->sb, "    movl     $0, %eax\n");
@@ -122,7 +120,10 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			// Set a return flag:
 			ret = 1;
 			generateX86(gen, node->retn.expression);
+			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop      %%ebp\n");
 			appendString(&gen->sb, "    movl     %eax, %eax\n");
+			appendString(&gen->sb, "    ret\n");
 			break;
 		}
 		case AST_IF: {
