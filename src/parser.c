@@ -133,6 +133,7 @@ ASTNode *parseFunction(Parser* parser) {
 }
 
 ASTNode *parseBlock(Parser* parser) {
+	// TODO : implement: https://stackoverflow.com/questions/22419790/c-error-expected-expression-before-int#22420796
 	if (currentToken(parser)->type != TOKEN_OBRACE) {
 		reportError(parser, "Expected '{' to start block");
 		skip(parser);
@@ -405,29 +406,6 @@ ASTNode *parseUnary(Parser* parser) {
 	node->unary.isPostfix = 0;
 	consume(parser, currentToken(parser)->type, "Before expression");
 	return node;
-	/*
-		if (currentToken(parser)->type == OP_COMPL) {
-			node->unary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_COMPL, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_NEGATION) {
-			node->unary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_NEGATION, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_NEGATIONL) {
-			node->unary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_NEGATIONL, "Before expression");
-			return node;
-		}
-		if (currentToken(parser)->type == OP_INC) {
-			node->unary.value = strdup(currentToken(parser)->value);
-			consume(parser, OP_INC, "Before expression");
-			return node;
-		}
-		return node;
-	*/
 }
 
 ASTNode *parseBinary(Parser* parser) {
