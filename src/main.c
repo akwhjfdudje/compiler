@@ -89,6 +89,7 @@ int main(int argc, char** argv) {
 	printf("Assembly code written to asm.s:\n%s\n", generator.sb.data);
 	#endif
 
+
 	const char *exeName = outputPath;
 	char command[1024];
 	snprintf(command, sizeof(command), "gcc -m32 asm.s -o %s", outputPath);
@@ -102,20 +103,19 @@ int main(int argc, char** argv) {
 		return ret;
 	}
 
-	//printf("Compilation succeeded: executable '%s' created.\n", exeName);
-	return 0;
-	
-	char exec[256];
-	snprintf(exec, sizeof(exec), "./%s", exeName);
-    ret = system(exec);
+	ret = system("rm asm.s");
 	if (ret != 0) {
-		fprintf(stderr, "Execution failed with %d\n", ret);
+		fprintf(stderr, "Deletion failed with %d\n", ret);
 		freeAST(ast);
 		freeTokens(tokens, token_count);
 		free((void *)basename);
 		free((void *)dir);
 		return ret;
 	}
+
+	//printf("Compilation succeeded: executable '%s' created.\n", exeName);
+	return 0;
+	
 	char rm[256];
 	snprintf(rm, sizeof(rm), "rm %s", exeName);
     ret = system(rm);
@@ -127,6 +127,7 @@ int main(int argc, char** argv) {
 		free((void *)dir);
 		return ret;
 	}
+
 
 	free(generator.sb.data);
 	freeAST(ast);
