@@ -70,6 +70,8 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			if (!(strcmp(node->function.name, "main")) && !(ret)) {
 				appendString(&gen->sb, "    movl     $0, %eax\n");
 			}
+			appendFormat(&gen->sb, "    movl     %%ebp, %%esp\n");
+			appendFormat(&gen->sb, "    pop      %%ebp\n");
 			appendString(&gen->sb, "    ret\n");
 			break;
 		}
