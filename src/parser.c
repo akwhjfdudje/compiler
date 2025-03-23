@@ -235,7 +235,8 @@ ASTNode *parseIf(Parser* parser) {
 							parseBlock(parser) : parseStatement(parser);
 	if (currentToken(parser)->type == KEYW_ELSE) {
 		consume(parser, KEYW_ELSE, "Start of else statement");
-		node->ifstmt.elsestmt = parseStatement(parser);
+		node->ifstmt.elsestmt = currentToken(parser)->type == TOKEN_OBRACE ? 
+								parseBlock(parser) : parseStatement(parser);
 	}
 	return node;
 }

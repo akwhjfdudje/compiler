@@ -129,8 +129,6 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 			break;
 		}
 		case AST_IF: {
-			// TODO: C doesn't allow declarations in if statements.
-			//       Need to refactor code (shouldn't be too bad).
 			generateX86(gen, node->ifstmt.condition);
 			char label[256];
 			makeLabel(label, labelCount);
