@@ -3,13 +3,13 @@
 #define GENERATOR_H
 
 typedef struct {
-	char *data;
-	size_t length;
-	size_t capacity;
+    char *data;
+    size_t length;
+    size_t capacity;
 } StringBuffer;
 
 typedef struct {
-	StringBuffer sb; // Accumulates generated code.
+    StringBuffer sb; // Accumulates generated code.
 } CodeGenerator;
 
 void initStringBuffer(StringBuffer *sb);

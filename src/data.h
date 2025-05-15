@@ -18,7 +18,7 @@ typedef struct {
 
 // Stack structure definition
 typedef struct {
-    int *array;        
+    HashMap** array;        
     size_t size;      
     size_t capacity;   
 } Stack;
@@ -33,9 +33,9 @@ int removeHash(HashMap* hashmap, const char* key);
 // Stack:
 Stack* createStack();
 void freeStack(Stack* stack);
-int stackPush(Stack* stack, int value);
-int stackPop(Stack* stack, int* value);
-int stackPeek(Stack* stack, int* value);
+int stackPush(Stack* stack, HashMap* value);
+int stackPop(Stack* stack, HashMap** value);
+int stackPeek(Stack* stack, HashMap** value);
 int stackIsEmpty(Stack* stack);
 size_t stackSize(Stack* stack);
 void stackResize(Stack* stack, size_t newCapacity);
