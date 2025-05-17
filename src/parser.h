@@ -44,6 +44,7 @@ typedef struct ASTNode {
             struct ASTNode *expression;
             struct ASTNode *declaration;
             struct ASTNode *ifstatement;
+            struct ASTNode *compound;
             struct ASTNode *retn;
         } statement;
 

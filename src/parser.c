@@ -172,6 +172,7 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = NULL;
         node->statement.expression = NULL;
         node->statement.ifstatement = NULL;
+        node->statement.compound = NULL;
         if (parser->errorFlag) {
             skip(parser);
             return NULL;
@@ -190,6 +191,7 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = parseDeclaration(parser);
         node->statement.expression = NULL;
         node->statement.ifstatement = NULL;
+        node->statement.compound = NULL;
         return node;
     }
     if (currentToken(parser)->type == KEYW_IF
@@ -199,6 +201,16 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = NULL;
         node->statement.expression = NULL;
         node->statement.ifstatement = parseIf(parser);
+        node->statement.compound = NULL;
+        return node;
+    }
+    if (currentToken(parser)->type == TOKEN_OBRACE) {
+        ASTNode *node = newASTNode(AST_STATEMENT);
+        node->statement.retn = NULL;
+        node->statement.declaration = NULL;
+        node->statement.expression = NULL;
+        node->statement.ifstatement = NULL;
+        node->statement.compound = parseBlock(parser);
         return node;
     }
     ASTNode *node = newASTNode(AST_STATEMENT);
@@ -477,6 +489,7 @@ void printAST(ASTNode *node, int indent) {
             printf("Statement:\n");
             if (node->statement.expression != NULL ) printAST(node->statement.expression, indent + 1);
             if (node->statement.declaration != NULL ) printAST(node->statement.declaration, indent + 1);
+            if (node->statement.compound != NULL ) printAST(node->statement.compound, indent + 1);
             if (node->statement.retn != NULL ) printAST(node->statement.retn, indent + 1);
             if (node->statement.ifstatement != NULL ) printAST(node->statement.ifstatement, indent + 1);
             break;

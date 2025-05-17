@@ -29,6 +29,7 @@ void freeHashmap(HashMap* hashmap);
 int getHash(HashMap* hashmap, const char* key);
 int insertHash(HashMap* hashmap, const char* key, int value);
 int removeHash(HashMap* hashmap, const char* key);
+int copyHashMap(HashMap* dest, const HashMap* src);
 
 // Stack:
 Stack* createStack();

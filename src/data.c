@@ -91,6 +91,36 @@ int removeHash(HashMap* hashmap, const char* key) {
     return -1; // Key not found
 }
 
+// Copy contents from src hashmap to dest hashmap
+int copyHashMap(HashMap* dest, const HashMap* src) {
+    if (dest == NULL || src == NULL) return -1;
+
+    // Check that the destination has enough capacity
+    if (dest->capacity < src->capacity) {
+        return -1; // Not enough capacity in the destination
+    }
+
+    // Clear destination first
+    for (size_t i = 0; i < dest->capacity; i++) {
+        if (dest->entries[i].key != NULL) {
+            free(dest->entries[i].key);
+            dest->entries[i].key = NULL;
+            dest->entries[i].value = -1;
+        }
+    }
+    dest->size = 0;
+
+    // Copy over entries from source
+    for (size_t i = 0; i < src->capacity; i++) {
+        if (src->entries[i].key != NULL) {
+            insertHash(dest, src->entries[i].key, src->entries[i].value);
+        }
+    }
+
+    return 0;
+}
+
+
 // Create a new stack
 Stack* createStack() {
     Stack* stack = (Stack*)malloc(sizeof(Stack));
@@ -99,7 +129,6 @@ Stack* createStack() {
     stack->array = (HashMap**)malloc(stack->capacity * sizeof(HashMap*));
     return stack;
 }
-
 // Free the memory allocated for the stack
 void freeStack(Stack* stack) {
     if (stack) {

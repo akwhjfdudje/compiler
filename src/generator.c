@@ -10,6 +10,7 @@
 int labelCount = 0;
 HashMap* varmap; 
 Stack* varmaps;
+int stackIndex = 0;
 int m;
 int cFail;
 int ret;
@@ -63,6 +64,7 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
 
     switch (node->type) {
         case AST_PROGRAM: {
+            varmaps = createStack();
             for (int i = 0; i < node->program.functionCount; i++) {
                 generateX86(gen, node->program.functions[i]);
             }
@@ -85,10 +87,23 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             break;
         }
         case AST_BLOCK: {
+            // Create a new hashmap:
+            HashMap *h = createHashmap(64);
+            HashMap *temp;
+            
+            // Check top of stack:
+            stackPeek(varmaps, &temp);
+            copyHashMap(h, temp);
+            stackPush(varmaps, h);
+            
             // Process each statement in the block.
             for (int i = 0; i < node->block.statementCount; i++) {
                 generateX86(gen, node->block.statements[i]);
             }
+            
+            // Pop and free:
+            stackPop(varmaps, &temp);
+            freeHashmap(temp);
             break;
         }
         case AST_STATEMENT: {
@@ -105,20 +120,28 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             if (node->statement.ifstatement != NULL) {
                 generateX86(gen, node->statement.ifstatement); // Generate code for the if statement. 
             }
+            if (node->statement.compound != NULL) {
+                appendString(&gen->sb, "    # block start:\n");
+                generateX86(gen, node->statement.compound); 
+                appendString(&gen->sb, "    # block end.\n");
+            }
             break;
         }
         case AST_DECL: {
             // Check existence:
-            if (!m) {
-                varmap = createHashmap(64);
+            if (stackIsEmpty(varmaps)) {
                 m = 1;
             }
+            stackPeek(varmaps, &varmap);
             const char *id = node->decl.identifier->identifier.value;
+            // TODO: need to figure out how to implement "shadowing", and redeclarations
+            /*
             if (getHash(varmap, id) != -1) {
                 // TODO: make better compiler errors...
-                printf("Compile error: identifier already declared at %s\n", id);
+                printf("Compile error: identifier already declared in this scope, at %s\n", id);
                 cFail = 1;
             }
+            */
             if (node->decl.initializer != NULL) {
                 generateX86(gen, node->decl.initializer);
             }
@@ -337,13 +360,19 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
                     cFail = 1;
                     return 1;
                 }
-                if (!m) {
-                    printf("Error: no identifiers exist yet.\n");
+                if (stackIsEmpty(varmaps)) {
+                    printf("Compile error: no identifiers exist yet.\n");
                     cFail = 1;
                     break;
                 }
+                stackPeek(varmaps, &varmap); // Get the most recent definition of the variable
                 const char *id = l->factor.identifier->identifier.value;
                 int varOffset = getHash(varmap, id);
+                if (varOffset == -1) {
+                    printf("Compile error: variable does not exist in this scope.\n");
+                    cFail = 1;
+                    break; 
+                }
                 char offset[32];
                 snprintf(offset, 32, "    movl     %%eax, %d(%%ebp)\n", varOffset);
                 appendString(&gen->sb, offset);
@@ -389,12 +418,13 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             }   
             break;
         }
-        case AST_IDENTIFIER: {
-            if (!m) {
+        case AST_IDENTIFIER: { 
+            if (stackIsEmpty(varmaps)) {
                 printf("Error: no identifiers exist yet.\n");
                 cFail = 1;
                 break;
             }
+            stackPeek(varmaps, &varmap); // Get the most recent definition of the thing
             int varOffset = getHash(varmap, node->identifier.value);
             if (varOffset == -1) {
                 printf("Compile error: identifier does not exist.\n");
