@@ -65,7 +65,6 @@ int main(int argc, char** argv) {
     #endif
 
     // Generate x86 code.
-
     CodeGenerator generator;
     initStringBuffer(&generator.sb);
     int compileFail = generateX86(&generator, ast);
@@ -90,7 +89,6 @@ int main(int argc, char** argv) {
     #ifdef DEBUG
     printf("Assembly code written to asm.s:\n%s\n", generator.sb.data);
     #endif
-
 
     const char *exeName = outputPath;
     char command[1024];
@@ -129,7 +127,6 @@ int main(int argc, char** argv) {
         free((void *)dir);
         return ret;
     }
-
 
     free(generator.sb.data);
     freeAST(ast);

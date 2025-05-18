@@ -8,7 +8,7 @@
 #include "data.h"
 
 int labelCount = 0;
-HashMap* varmap; 
+HashMap *varmap, *localmap; 
 Stack* varmaps;
 int stackIndex = 0;
 int m;
@@ -89,21 +89,29 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
         case AST_BLOCK: {
             // Create a new hashmap:
             HashMap *h = createHashmap(64);
+            HashMap *l = createHashmap(64);
             HashMap *temp;
+            int stackIndextemp = stackIndex;
             
             // Check top of stack:
             stackPeek(varmaps, &temp);
             copyHashMap(h, temp);
             stackPush(varmaps, h);
             
-            // Process each statement in the block.
+            // Set local:
+            localmap = l;
+            
+            // Process each statement in the block:
             for (int i = 0; i < node->block.statementCount; i++) {
                 generateX86(gen, node->block.statements[i]);
             }
             
             // Pop and free:
+            // stackIndex = stackIndextemp;
             stackPop(varmaps, &temp);
             freeHashmap(temp);
+            freeHashmap(l);
+            // freeHashmap(h);
             break;
         }
         case AST_STATEMENT: {
@@ -134,20 +142,18 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             }
             stackPeek(varmaps, &varmap);
             const char *id = node->decl.identifier->identifier.value;
-            // TODO: need to figure out how to implement "shadowing", and redeclarations
-            /*
-            if (getHash(varmap, id) != -1) {
+            if (getHash(localmap, id) != -1) {
                 // TODO: make better compiler errors...
                 printf("Compile error: identifier already declared in this scope, at %s\n", id);
                 cFail = 1;
             }
-            */
             if (node->decl.initializer != NULL) {
                 generateX86(gen, node->decl.initializer);
             }
             appendString(&gen->sb, "    pushl    %eax\n");
             stackIndex -= 4;    
             insertHash(varmap, id, stackIndex);
+            insertHash(localmap, id, stackIndex);
             break;
         }
         case AST_RETURN: {
@@ -177,7 +183,7 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             generateX86(gen, node->ifstmt.body);
             char label2[256];
             makeLabel(label2, labelCount);
-            appendString(&gen->sb, "    jmp   ");
+            appendString(&gen->sb, "    jmp     ");
             appendString(&gen->sb, label2);
             appendString(&gen->sb, "\n");
             appendString(&gen->sb, label);
