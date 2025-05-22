@@ -94,8 +94,8 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             int stackIndextemp = stackIndex;
             
             // Check top of stack:
-            stackPeek(varmaps, &temp);
-            copyHashMap(h, temp);
+            if (stackPeek(varmaps, &temp) != -1) 
+                copyHashMap(h, temp);
             stackPush(varmaps, h);
             
             // Set local:
@@ -107,11 +107,15 @@ int generateX86(CodeGenerator *gen, ASTNode *node) {
             }
             
             // Pop and free:
-            // stackIndex = stackIndextemp;
+            stackIndextemp -= stackIndex;
             stackPop(varmaps, &temp);
             freeHashmap(temp);
             freeHashmap(l);
             // freeHashmap(h);
+            char resetString[64];
+            snprintf(resetString, 64, "    addl     $%d, %%esp\n", stackIndextemp);
+            appendString(&gen->sb, resetString);
+            stackIndex += stackIndextemp;
             break;
         }
         case AST_STATEMENT: {
