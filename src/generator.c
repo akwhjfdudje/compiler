@@ -48,17 +48,6 @@ void makeLabel(char *label, int id) {
 }
 
 int generateX86(CodeGenerator *gen, ASTNode *node) {
-    // TODO: 
-    // Stage 7 handles C "scope". The method to get this
-    // functionality working in this compiler will be as follows:
-    // - Create a stack at the start of the code generation
-    // - When entering a block, create a hashmap, which is then pushed 
-    //   onto the stack
-    //   - If peek() on the stack doesn't return a NULL (there is another)
-    //     , copy the contents of that top hashmap (how?) and use that as
-    //     the new hashmap (i.e., push that new hashmap onto the stack)
-    // - When assigning or referencing, peek the stack, and use that hashmap
-    // - At the end of a block, pop the stack, free the hashmap, move on
     if (!node)
         return 1;
 
