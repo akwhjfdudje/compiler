@@ -166,12 +166,24 @@ ASTNode *parseBlock(Parser* parser) {
 }
 
 ASTNode *parseStatement(Parser* parser) {
+    // Empty statement???
+    if (currentToken(parser)->type == TOKEN_SEMICOL) {
+        ASTNode *node = newASTNode(AST_STATEMENT);
+        node->statement.retn = NULL;
+        node->statement.declaration = NULL;
+        node->statement.expression = NULL;
+        node->statement.ifstatement = NULL;
+        node->statement.forstatement = NULL;
+        node->statement.compound = NULL;
+        return node;
+    }
     if (currentToken(parser)->type == KEYW_RETURN) {
         ASTNode *node = newASTNode(AST_STATEMENT);
         node->statement.retn = parseReturn(parser);
         node->statement.declaration = NULL;
         node->statement.expression = NULL;
         node->statement.ifstatement = NULL;
+        node->statement.forstatement = NULL;
         node->statement.compound = NULL;
         if (parser->errorFlag) {
             skip(parser);
@@ -191,6 +203,7 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = parseDeclaration(parser);
         node->statement.expression = NULL;
         node->statement.ifstatement = NULL;
+        node->statement.forstatement = NULL;
         node->statement.compound = NULL;
         return node;
     }
@@ -201,6 +214,17 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = NULL;
         node->statement.expression = NULL;
         node->statement.ifstatement = parseIf(parser);
+        node->statement.forstatement = NULL;
+        node->statement.compound = NULL;
+        return node;
+    }
+    if (currentToken(parser)->type == KEYW_FOR) {
+        ASTNode *node = newASTNode(AST_STATEMENT);
+        node->statement.retn = NULL;
+        node->statement.declaration = NULL;
+        node->statement.expression = NULL;
+        node->statement.ifstatement = NULL;
+        node->statement.forstatement = parseFor(parser);
         node->statement.compound = NULL;
         return node;
     }
@@ -210,6 +234,7 @@ ASTNode *parseStatement(Parser* parser) {
         node->statement.declaration = NULL;
         node->statement.expression = NULL;
         node->statement.ifstatement = NULL;
+        node->statement.forstatement = NULL;
         node->statement.compound = parseBlock(parser);
         return node;
     }
@@ -250,6 +275,27 @@ ASTNode *parseIf(Parser* parser) {
         node->ifstmt.elsestmt = currentToken(parser)->type == TOKEN_OBRACE ? 
                                 parseBlock(parser) : parseStatement(parser);
     }
+    return node;
+}
+
+ASTNode *parseFor(Parser* parser) {
+    if (currentToken(parser)->type != KEYW_FOR) {
+        reportError(parser, "Expected for");
+        skip(parser);
+        return NULL;
+    }
+
+    consume(parser, KEYW_FOR, "Start of for loop");
+    consume(parser, TOKEN_OPAREN, "Expected parenthesis");
+    ASTNode* node = newASTNode(AST_FOR);
+    node->forstmt.init = parseExpression(parser, 0);
+    consume(parser, TOKEN_SEMICOL, "Expected semicolon for initial condition");
+    node->forstmt.condition = parseExpression(parser, 0);
+    consume(parser, TOKEN_SEMICOL, "Expected semicolon for repeating condition");
+    node->forstmt.postexp = parseExpression(parser, 0);
+    consume(parser, TOKEN_CPAREN, "Expected end of expression.");
+    node->forstmt.body = currentToken(parser)->type == TOKEN_OBRACE ? 
+                            parseBlock(parser) : parseStatement(parser);
     return node;
 }
 

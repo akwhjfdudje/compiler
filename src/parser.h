@@ -8,6 +8,11 @@ typedef enum {
     AST_STATEMENT,
     AST_DECL,
     AST_IF,
+    AST_FOR,
+    AST_WHILE,
+    AST_DO,
+    AST_BREAK,
+    AST_CONT,
     AST_TERNARY,
     AST_RETURN,
     AST_EXPRESSION,
@@ -44,6 +49,7 @@ typedef struct ASTNode {
             struct ASTNode *expression;
             struct ASTNode *declaration;
             struct ASTNode *ifstatement;
+            struct ASTNode *forstatement;
             struct ASTNode *compound;
             struct ASTNode *retn;
         } statement;
@@ -59,6 +65,14 @@ typedef struct ASTNode {
             struct ASTNode *body;
             struct ASTNode *elsestmt;
         } ifstmt;
+
+        // AST_FOR: for statement
+        struct {
+            struct ASTNode *init; 
+            struct ASTNode *condition;
+            struct ASTNode *postexp;
+            struct ASTNode *body;
+        } forstmt;
 
         // AST_TERNARY: ternary conditional
         struct {
@@ -128,6 +142,7 @@ ASTNode *parseFunction(Parser* parser);
 ASTNode *parseBlock(Parser* parser);
 ASTNode *parseStatement(Parser* parser);
 ASTNode *parseIf(Parser* parser);
+ASTNode *parseFor(Parser* parser);
 ASTNode *parseReturn(Parser* parser);
 ASTNode *parseDeclaration(Parser* parser);
 ASTNode *parseExpression(Parser* parser, int precedence);

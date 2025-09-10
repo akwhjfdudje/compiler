@@ -10,6 +10,11 @@ const char* keywords[] = {
     "int",
     "if",
     "else",
+    "for",
+    "while",
+    "do",
+    "break",
+    "continue",
     NULL
 };
 
@@ -214,6 +219,21 @@ Token* lexerNextToken(Lexer* l) {
                 }
                 if (strcmp(str, "else") == 0) {
                     return createToken(KEYW_ELSE, str);
+                }
+                if (strcmp(str, "for") == 0) {
+                    return createToken(KEYW_FOR, str);
+                }
+                if (strcmp(str, "while") == 0) {
+                    return createToken(KEYW_WHILE, str);
+                }
+                if (strcmp(str, "do") == 0) {
+                    return createToken(KEYW_DO, str);
+                }
+                if (strcmp(str, "break") == 0) {
+                    return createToken(KEYW_BREAK, str);
+                }
+                if (strcmp(str, "continue") == 0) {
+                    return createToken(KEYW_CONT, str);
                 }
             }
             return createToken(TOKEN_IDENTIFIER, str);
