@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+// TODO: re-implement using search trees to pass funky testcases
+
 // Hash function to compute index for a key
 static size_t hash(const char* key, size_t capacity) {
     size_t hash_value = 0;
